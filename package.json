@@ -1,0 +1,27 @@
+{
+  "name": "service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@adiwajshing/baileys": "^5.0.0",
+    "@whiskeysockets/baileys": "^6.5.0",
+    "mongodb": "^6.1.0",
+    "mongoose": "^7.6.0",
+    "node-schedule": "^2.1.1",
+    "os": "^0.1.2",
+    "path": "^0.12.7",
+    "whatsapp-web.js": "^1.22.1",
+    "winston": "^3.10.0",
+    "winston-daily-rotate-file": "^4.7.1",
+    "winston-mongodb": "^5.1.1",
+    "worker": "^0.4.0"
+  }
+}
