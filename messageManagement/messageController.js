@@ -1,6 +1,6 @@
 const wpClient = require("./wpController");
 const { wpSessionCollection, BufferJSON } = require("../model/wpSession.types");
-const logger = require("../Utils/logger");
+const { logger } = require("../Utils/logger");
 const { globalConfig } = require("../model/config");
 const { makeWASocket, DisconnectReason, delay } = require("@whiskeysockets/baileys");
 const { customerModel } = require("../model/customers.types");
@@ -8,6 +8,7 @@ const fs = require("fs");
 
 class MessageController {
   constructor(dependencies) {
+    // defining all dependencies
     this.dependencies = dependencies;
     this.controller = new wpClient.WpController(
       this.dependencies.userProps.session
@@ -19,6 +20,7 @@ class MessageController {
   }
 
   DefineStrategy() {
+    // making strategy for send types
     if (this.dependencies.files) {
       this.isFile = true;
     }
@@ -31,12 +33,13 @@ class MessageController {
   }
 
   async checkAuthentication() {
+    // checking authentication 
     if (this.dependencies.userProps.session) {
       const { state, saveCreds } = await this.controller.useMongoDBAuthState(
         wpSessionCollection
       );
       if (!state) {
-        logger.logger.Log(
+        logger.Log(
           globalConfig.LogTypes.error,
           globalConfig.LogLocations.all,
           "Session Error"
@@ -44,7 +47,7 @@ class MessageController {
         return null;
       } else return { state, saveCreds };
     } else {
-      logger.logger.Log(
+      logger.Log(
         globalConfig.LogTypes.error,
         globalConfig.LogLocations.all,
         "Session Error"
@@ -53,6 +56,8 @@ class MessageController {
     }
   }
   async ExecuteProcess() {
+
+    // execution of the sending message for all customers
     const { state, saveCreds } = await this.checkAuthentication();
     if (state == null) return;
     const socket = makeWASocket({
@@ -74,7 +79,7 @@ class MessageController {
         const settings = this.dependencies.userProps.settings;
         const randomDelay =
           Math.random() *
-            (settings.max_message_delay - settings.min_message_delay) +
+          (settings.max_message_delay - settings.min_message_delay) +
           settings.min_message_delay;
         this.dependencies.queueItems.map(async (item) => {
           const customer = await customerModel.findById(item.customerId);
@@ -82,16 +87,18 @@ class MessageController {
             const wpId = `${customer.phone}${this.baseIdName}`;
             if (this.isFile && this.isMessage) {
               this.sendFileAndMessage(socket, wpId);
-            } else if (this.isFile && !this.isMessage) {
+            }
+            else if (this.isFile && !this.isMessage) {
               await this.sendFile(socket, wpId);
-            } else if (!this.isFile && this.isMessage) {
+            }
+            else if (!this.isFile && this.isMessage) {
               await this.sendMessage(socket, wpId);
             }
-            logger.logger.Log(
+            // save to the history
+            logger.Log(
               globalConfig.LogTypes.info,
               globalConfig.LogLocations.all,
-              `Message sended to [${customer._id.toString()}] by [${
-                settings.userId
+              `Message sended to [${customer._id.toString()}] by [${settings.userId
               }]`
             );
           }
@@ -106,9 +113,8 @@ class MessageController {
 
   async sendFile(socket, customer) {
     this.dependencies.files.map(async (file) => {
-      const fullFilePath = `${
-        globalConfig.baseRootPath
-      }${this.dependencies.queue._id.toString()}/${file}`;
+      const fullFilePath = `${globalConfig.baseRootPath
+        }${this.dependencies.queue._id.toString()}/${file}`;
       await socket.sendMessage(customer, {
         image: { url: fullFilePath },
       });
