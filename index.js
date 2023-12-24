@@ -13,13 +13,27 @@ const { globalConfig } = require('./model/config');
 const runScript = async () => {
   try {
     if (isMainThread) {
-      logger.log(globalConfig.LogTypes.info,
+      logger.Log(globalConfig.LogTypes.info,
         globalConfig.LogLocations.consoleAndFile,
         "Service Started for searching active queque");
-      await mongoose.connect(globalConfig.mongo_url);
-      const currentDate = new Date("2023-10-08T13:40:40.498+00:00");
-      const quequeList = await quequeModel.find({ startDate: currentDate });
+      await mongoose.connect(globalConfig.mongo_url).then(async(result) => {
+        logger.Log(
+          globalConfig.LogTypes.info,
+          globalConfig.LogLocations.consoleAndFile,
 
+          `Connected To the Database`
+        );
+      });
+      const currentDate = new Date(); // Şu anki tarih ve saat
+      const currentHour = currentDate.getHours();
+      const currentMinute = currentDate.getMinutes();
+
+      const quequeList = await quequeModel.find({
+        startDate: {
+          $gte: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), currentHour, currentMinute),
+          $lt: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), currentHour, currentMinute + 1)
+        }
+      });
       if (quequeList.length > 0) {
         for (const queque of quequeList) {
           //adding workers for each queque inside of the queque list
@@ -28,6 +42,7 @@ const runScript = async () => {
           });
           // starting workers with opening new threads
           worker.postMessage('start');
+          console.log(`THREAD ID: ${worker.threadId}`);
         }
       } else {
         logger.Log(
@@ -39,17 +54,18 @@ const runScript = async () => {
       }
     }
   } catch (error) {
-    logger.log(globalConfig.LogTypes.error, globalConfig.LogLocations.all, "Database Connection Error [CRITICAL]", error);
+    logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.all, "Database Connection Error [CRITICAL]", error);
   }
 }
 process.on('SIGINT', () => {
   mongoose.connection.close(() => {
-    logger.log(globalConfig.LogTypes.info, globalConfig.LogLocations.console, 'MongoDB bağlantısı kapatıldı.');
+    logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.console, 'MongoDB bağlantısı kapatıldı.');
     process.exit(0);
   });
 });
 
-schedule.scheduleJob("*/10 * * * *", async function() {
+schedule.scheduleJob("*/1 * * * *", async function() {
   await runScript();
 });
+
 

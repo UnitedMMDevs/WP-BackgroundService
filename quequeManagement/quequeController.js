@@ -1,4 +1,4 @@
-const { workerData, parentPort } = require("worker_threads");
+const { workerData, parentPort, threadId } = require("worker_threads");
 const { globalConfig } = require("../model/config");
 const { quequeItemModel } = require("../model/quequeItem.types");
 const { userModel } = require("../model/user.types");
@@ -39,7 +39,7 @@ class QueueController {
     // this code block
     // collecting all the dependencies for sending message operation to queque
     try {
-      logger.log(globalConfig.LogTypes.info,
+      logger.Log(globalConfig.LogTypes.info,
         globalConfig.LogLocations.consoleAndFile,
         `Service collection dependencies for this queque [${this.queue._id.toString()}]`
       )
@@ -61,7 +61,7 @@ class QueueController {
         queueItems: this.queueItems,
       };
     } catch (err) {
-      logger.log(
+      logger.Log(
         globalConfig.LogTypes.error,
         globalConfig.LogLocations.all,
         `System Fail message: ${err.message.toString()} for this queque: [${this.queue._id.toString()}]`
@@ -119,10 +119,22 @@ parentPort.on("message", async (message) => {
   // listening for start operation 
   // and opening new thread for these workflow
   if (message === "start") {
+    logger.Log(globalConfig.LogTypes.info,
+      globalConfig.LogLocations.console,
+      `|||||||||||||| WORKER HAS BEEN START ${threadId} |||||||||||`)
     const { queque } = workerData;
     if (queque) {
       const controller = new QueueController(queque);
       await controller.ExecuteProcess();
     }
+  }
+  if (message == "pause")
+  {
+    
+  }
+  if (message === 'terminate')
+  {
+    console.log("terminated");
+    process.exit(0);
   }
 });
