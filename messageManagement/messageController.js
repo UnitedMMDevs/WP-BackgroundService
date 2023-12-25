@@ -2,12 +2,12 @@ const fs = require("fs");
 const { makeWASocket, DisconnectReason, delay, isJidBroadcast } = require("@whiskeysockets/baileys");
 
 const wpClient = require("./wpController");
-const { wpSessionCollection, BufferJSON } = require("../model/wpSession.types");
 const { logger } = require("../Utils/logger");
 const { globalConfig, socketOptions } = require("../model/config");
 const { customerModel } = require("../model/customers.types");
 const {parentPort} = require('worker_threads');
-const {closeSocket, sendFile, sendMessage, sendFileAndMessage} = require('../Utils/wp-utilities');
+const {closeSocket, sendFile, sendMessage, sendFileAndMessage, checkAuthentication} = require('../Utils/wp-utilities');
+const { getRandomDelay } = require("../Utils/utilties");
 
 
 class MessageController {
@@ -37,35 +37,10 @@ class MessageController {
     }
   }
 
-  async checkAuthentication() {
-    // checking authentication 
-    if (this.dependencies.userProps.session) {
-      const { state, saveCreds } = await this.controller.useMongoDBAuthState(
-        wpSessionCollection
-      );
-      if (!state) {
-        logger.Log(
-          globalConfig.LogTypes.error,
-          globalConfig.LogLocations.all,
-          "Session Error"
-        );
-        return null;
-      } else return { state, saveCreds };
-    } else {
-      logger.Log(
-        globalConfig.LogTypes.error,
-        globalConfig.LogLocations.all,
-        "Session Error"
-      );
-      return null;
-    }
-  }
-  // Helper function for generating a random delay
-  getRandomDelay(min, max) {
-    return Math.random() * (max - min) + min;
-  }
+
+
   async ExecuteProcess() {
-    const { state, saveCreds } = await this.checkAuthentication();
+    const { state, saveCreds } = await checkAuthentication(logger, this.controller, this.dependencies.userProps.session);
     if (!state) return;  
     const socket = makeWASocket(socketOptions);
     socket.ev.on('connection.update', async({ connection, lastDisconnect }) => {
@@ -83,7 +58,7 @@ class MessageController {
         {
           for (const item of this.dependencies.queueItems) {
             const customer = await customerModel.findById(item.customerId);
-            const delaySeconds = this.getRandomDelay(
+            const delaySeconds = getRandomDelay(
               settings.min_message_delay,
               settings.max_message_delay
             );
@@ -120,10 +95,6 @@ class MessageController {
     );
     await delay(delaySeconds * 1000);
     this.counter++;
-    console.log(this.counter);
   }
-
-  
-  
 }
 module.exports = { MessageController };

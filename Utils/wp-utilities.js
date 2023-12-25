@@ -1,4 +1,5 @@
 const { globalConfig } = require("../model/config");
+const { wpSessionCollection } = require("../model/wpSession.types");
 
 const sendFile = async(socket, customer, files, queue) => {
     files.map(async (file) => {
@@ -29,9 +30,32 @@ const sendFileAndMessage = async(socket, customer, files, queue) => {
     await sendFile(socket, customer, files, queue);
     await sendMessage(socket, customer);
   }
-const closeSocket = (socket, parentPort) => {
-    socket.end();
-    parentPort.postMessage('terminate');
-}
 
-module.exports = {closeSocket, sendFile, sendFileAndMessage, sendMessage}
+const checkAuthentication = async(logger, controller, session) => {
+  // checking authentication 
+  if (session) {
+    const { state, saveCreds } = await controller.useMongoDBAuthState(
+      wpSessionCollection
+    );
+    if (!state) {
+      logger.Log(
+        globalConfig.LogTypes.error,
+        globalConfig.LogLocations.all,
+        "Session Error"
+      );
+      return null;
+    } else return { state, saveCreds };
+  } else {
+    logger.Log(
+      globalConfig.LogTypes.error,
+      globalConfig.LogLocations.all,
+      "Session Error"
+    );
+    return null;
+  }
+}
+const closeSocket = (socket, parentPort) => {
+  socket.end();
+  parentPort.postMessage('terminate');
+}
+module.exports = {closeSocket, sendFile, sendFileAndMessage, sendMessage, checkAuthentication}
