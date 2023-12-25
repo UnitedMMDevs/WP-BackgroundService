@@ -23,6 +23,7 @@ class MessageController {
     this.baseIdName = "@s.whatsapp.net";
     this.DefineStrategy();
     this.counter = 0;
+    this.message_updates = [];
   }
 
   DefineStrategy() {
@@ -36,6 +37,7 @@ class MessageController {
     ) {
       this.isMessage = true;
     }
+    
   }
 
 
@@ -76,10 +78,8 @@ class MessageController {
     })
     socket.ev.on("messages.update", async (update) => {
       console.log("update", update);
+      this.message_updates.append(update);
     })
-  
-
-    
   }
   
   async HandleSendMessageState(socket, customer, delaySeconds) {

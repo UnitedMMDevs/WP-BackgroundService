@@ -53,6 +53,10 @@ const checkAuthentication = async(logger, controller, session) => {
     return null;
   }
 }
+
+const handleMessageUpdates = async(updates, itemModel, queueModel, transactionModel, logger) => {
+  
+}
 const closeSocket = (socket, parentPort) => {
   socket.end();
   parentPort.postMessage('terminate');
