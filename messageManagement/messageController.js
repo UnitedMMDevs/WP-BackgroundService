@@ -8,6 +8,7 @@ const { customerModel } = require("../model/customers.types");
 const {parentPort} = require('worker_threads');
 const {closeSocket, sendFile, sendMessage, sendFileAndMessage, checkAuthentication} = require('../Utils/wp-utilities');
 const { getRandomDelay } = require("../Utils/utilties");
+const { quequeModel, QUEUE_STATUS } = require("../model/queque.types");
 
 
 class MessageController {
@@ -53,8 +54,10 @@ class MessageController {
       }
       else if (connection === 'open'){
         await saveCreds();
+        const queueCheck = await quequeModel.findOne({_id: this.dependencies.queue._id.toString()});
+        const condition = (queueCheck.status !== QUEUE_STATUS.PAUSED)
         const settings = this.dependencies.userProps.settings;
-        if (this.counter < this.dependencies.queueItems.length)
+        if (this.counter < this.dependencies.queueItems.length && condition)
         {
           for (const item of this.dependencies.queueItems) {
             const customer = await customerModel.findById(item.customerId);

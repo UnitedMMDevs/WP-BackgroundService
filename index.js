@@ -7,7 +7,7 @@ const {
   workerData,
 } = require("worker_threads");
 
-const { quequeSchema, quequeModel } = require("./model/queque.types");
+const { quequeSchema, quequeModel, QUEUE_STATUS } = require("./model/queque.types");
 const mongoose = require("mongoose");
 const { globalConfig } = require('./model/config');
 const runScript = async () => {
@@ -24,23 +24,28 @@ const runScript = async () => {
           `Connected To the Database`
         );
       });
-      const currentDate = new Date(); // Şu anki tarih ve saat
-      const currentHour = currentDate.getHours();
-      const currentMinute = currentDate.getMinutes();
+      const currentDate = new Date();
+      const currentHour = currentDatet.getHours();
+      const currentMinute = currentDae.getMinutes();
 
       const quequeList = await quequeModel.find({
         startDate: {
           $gte: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), currentHour, currentMinute),
           $lt: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), currentHour, currentMinute + 1)
-        }
+        },
+        status: QUEUE_STATUS.PENDING
       });
       if (quequeList.length > 0) {
-        for (const queque of quequeList) {
+        for (let queque of quequeList) {
           //adding workers for each queque inside of the queque list
+          queque.status = QUEUE_STATUS.IN_PROGRESS;
+          const updatedQueue = await quequeModel.updateOne(
+            {_id: queque._id.toString()},
+            {$set: queque}  
+          );
           const worker = new Worker("./quequeManagement/quequeController.js", {
-            workerData: { queque: JSON.stringify(queque) },
+            workerData: { queque: JSON.stringify(updatedQueue) },
           });
-          // starting workers with opening new threads
           worker.postMessage('start');
           console.log(`THREAD ID: ${worker.threadId}`);
         }
@@ -48,7 +53,6 @@ const runScript = async () => {
         logger.Log(
           globalConfig.LogTypes.info,
           globalConfig.LogLocations.consoleAndFile,
-
           `There is no queque for this Date => [${currentDate}]`
         );
       }
@@ -59,7 +63,7 @@ const runScript = async () => {
 }
 process.on('SIGINT', () => {
   mongoose.connection.close(() => {
-    logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.console, 'MongoDB bağlantısı kapatıldı.');
+    logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.console, 'Database connection has been closed.');
     process.exit(0);
   });
 });

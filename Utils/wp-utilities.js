@@ -32,7 +32,6 @@ const sendFileAndMessage = async(socket, customer, files, queue) => {
   }
 
 const checkAuthentication = async(logger, controller, session) => {
-  // checking authentication 
   if (session) {
     const { state, saveCreds } = await controller.useMongoDBAuthState(
       wpSessionCollection
