@@ -1,11 +1,15 @@
+const fs = require("fs");
+const { makeWASocket, DisconnectReason, delay, isJidBroadcast } = require("@whiskeysockets/baileys");
+
 const wpClient = require("./wpController");
 const { wpSessionCollection, BufferJSON } = require("../model/wpSession.types");
 const { logger } = require("../Utils/logger");
-const { globalConfig } = require("../model/config");
-const { makeWASocket, DisconnectReason, delay, isJidBroadcast } = require("@whiskeysockets/baileys");
+const { globalConfig, socketOptions } = require("../model/config");
 const { customerModel } = require("../model/customers.types");
-const fs = require("fs");
 const {parentPort} = require('worker_threads');
+const {closeSocket, sendFile, sendMessage, sendFileAndMessage} = require('../Utils/wp-utilities');
+
+
 class MessageController {
   constructor(dependencies) {
     // defining all dependencies
@@ -62,37 +66,19 @@ class MessageController {
   }
   async ExecuteProcess() {
     const { state, saveCreds } = await this.checkAuthentication();
-  
-    if (!state) return;
-  
-    const socketOptions = {
-      printQRInTerminal: false,
-      auth: state,
-      receivedPendingNotifications: false,
-      defaultQueryTimeoutMs: undefined,
-      markOnlineOnConnect: false,
-      shouldIgnoreJid: jid => isJidBroadcast(jid),
-      syncFullHistory: false
-
-    };
-  
+    if (!state) return;  
     const socket = makeWASocket(socketOptions);
-  
     socket.ev.on('connection.update', async({ connection, lastDisconnect }) => {
       const status = lastDisconnect?.error?.output?.statusCode
-  
       if (connection === 'close'){
-          const reason = Object.entries(DisconnectReason).find(i => i[1] === status)?.[0] || 'unknown'
-  
-          console.log(`Closed connection, status: ${reason} (${status})`)
-  
+          const reason = Object.entries(DisconnectReason).find(i => i[1] === status)?.[0] || 'unknown'  
           if (status !== 403 && status === 401 && !status){
             this.ExecuteProcess()
           }
-      } else if (connection === 'open'){
+      }
+      else if (connection === 'open'){
         await saveCreds();
         const settings = this.dependencies.userProps.settings;
-  
         if (this.counter < this.dependencies.queueItems.length)
         {
           for (const item of this.dependencies.queueItems) {
@@ -102,70 +88,42 @@ class MessageController {
               settings.max_message_delay
             );
             if (customer) {
-              const wpId = `${customer.phone}${this.baseIdName}`;
-              if (this.isFile && this.isMessage) {
-                this.sendFileAndMessage(socket, wpId);
-              } else if (this.isFile && !this.isMessage) {
-                await this.sendFile(socket, wpId);
-              } else if (!this.isFile && this.isMessage) {
-                await this.sendMessage(socket, wpId);
-              }
-              logger.Log(
-                globalConfig.LogTypes.info,
-                globalConfig.LogLocations.all,
-                `Message sent to [${customer._id.toString()}] by [${settings.userId}]`
-              );
-              await delay(delaySeconds * 1000);
-              this.counter++;
-              console.log(this.counter);
+              await this.HandleSendMessageState(socket, customer, delaySeconds)
             }
           }
         }
         else 
-          this.closeSocket(socket);
+          closeSocket(socket, parentPort);
       }
-  })
+    })
+    socket.ev.on("messages.update", async (update) => {
+      console.log("update", update);
+    })
+  
 
     
   }
   
-
-
-  async sendFile(socket, customer) {
-    this.dependencies.files.map(async (file) => {
-      const fullFilePath = `${globalConfig.baseRootPath
-        }${this.dependencies.queue._id.toString()}/${file}`;
-      await socket.sendMessage(customer, {
-        image: { url: fullFilePath },
-      });
-    });
-    socket.cleanDirtyBits()
+  async HandleSendMessageState(socket, customer, delaySeconds) {
+    const wpId = `${customer.phone}${this.baseIdName}`;
+    if (this.isFile && this.isMessage) {
+      sendFileAndMessage(socket, wpId, this.dependencies.files, this.dependencies.queue);
+    } else if (this.isFile && !this.isMessage) {
+      await sendFile(socket, wpId, this.dependencies.files, this.dependencies.queue);
+    } else if (!this.isFile && this.isMessage) {
+      await sendMessage(socket, wpId);
+    }
+    logger.Log(
+      globalConfig.LogTypes.info,
+      globalConfig.LogLocations.all,
+      `Message sent to [${customer._id.toString()}] by [${settings.userId}]`
+    );
+    await delay(delaySeconds * 1000);
+    this.counter++;
+    console.log(this.counter);
   }
 
-  async sendMessage(socket, customer) {
-    // return success or fail
-    const buttonMessage = {
-      text:
-        this.dependencies.queue.quequeTitle +
-        "\n" +
-        this.dependencies.queue.quequeMessage,
-      footer: "Pro WhatsApp Web",
-      headerType: 1,
-    };
-    await socket.sendMessage(customer, buttonMessage);
-    socket.cleanDirtyBits()
-  }
-
-  async sendFileAndMessage(socket, customer) {
-    await this.sendFile(socket, customer);
-    await this.sendMessage(socket, customer);
-  }
-  closeSocket(socket) {
-    socket.end();
-    console.log("socket closed")
-    parentPort.postMessage('terminate');
-    parentPort.off();
-  }
+  
   
 }
 module.exports = { MessageController };

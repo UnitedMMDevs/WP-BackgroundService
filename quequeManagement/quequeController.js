@@ -12,6 +12,7 @@ const { default: mongoose } = require("mongoose");
 const fs = require("fs");
 const { logger } = require('../Utils/logger');
 const { MessageController } = require("../messageManagement/messageController");
+const { QUEUE_STATUS, quequeModel } = require("../model/queque.types");
 
 
 
@@ -32,6 +33,8 @@ class QueueController {
       `The Queque process executing for ${this.queue._id.toString()}]`)
     const dependencies = await this.InitializeDependencies();
     if (dependencies) {
+      this.queue.status = QUEUE_STATUS.IN_PROGRESS;
+      await quequeModel.updateOne({_id: this.queue._id}, this.queue);
       await (new MessageController(dependencies)).ExecuteProcess();
     }
   }

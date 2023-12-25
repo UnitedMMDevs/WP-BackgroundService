@@ -19,4 +19,13 @@ const globalConfig = {
 
     }
 }
-module.exports = {globalConfig};
+const socketOptions = {
+    printQRInTerminal: false,
+    auth: state,
+    receivedPendingNotifications: false,
+    defaultQueryTimeoutMs: undefined,
+    markOnlineOnConnect: false,
+    shouldIgnoreJid: jid => isJidBroadcast(jid),
+    syncFullHistory: false
+  };
+module.exports = {globalConfig, socketOptions};

@@ -1,5 +1,12 @@
 const mongoose = require('mongoose');
 
+const QUEUE_STATUS = {
+    PENDING:'PENDING',
+    IN_PROGRESS: 'IN_PROGRESS',
+    COMPLETED: 'COMPLETED',
+    PAUSED: 'PAUSED',
+}
+  
 const quequeSchema = new mongoose.Schema({
     userId: {
         type: String,
@@ -38,4 +45,4 @@ const quequeSchema = new mongoose.Schema({
 
 });
 const quequeModel = mongoose.model('queques', quequeSchema);
-module.exports = {quequeModel}
+module.exports = {quequeModel, QUEUE_STATUS}
