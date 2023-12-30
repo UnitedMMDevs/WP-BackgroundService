@@ -3,7 +3,7 @@ const { makeWASocket, DisconnectReason, delay, isJidBroadcast } = require("@whis
 
 const wpClient = require("./wpController");
 const { logger } = require("../Utils/logger");
-const { globalConfig, socketOptions } = require("../model/config");
+const { globalConfig } = require("../model/config");
 const { customerModel } = require("../model/customers.types");
 const {parentPort} = require('worker_threads');
 const {closeSocket, sendFile, sendMessage, sendFileAndMessage, checkAuthentication} = require('../Utils/wp-utilities');
@@ -44,7 +44,16 @@ class MessageController {
 
   async ExecuteProcess() {
     const { state, saveCreds } = await checkAuthentication(logger, this.controller, this.dependencies.userProps.session);
-    if (!state) return;  
+    if (!state) return;
+    const socketOptions = {
+      printQRInTerminal: false,
+      auth: state,
+      receivedPendingNotifications: false,
+      defaultQueryTimeoutMs: undefined,
+      markOnlineOnConnect: false,
+      shouldIgnoreJid: jid => isJidBroadcast(jid),
+      syncFullHistory: false
+    };
     const socket = makeWASocket(socketOptions);
     socket.ev.on('connection.update', async({ connection, lastDisconnect }) => {
       const status = lastDisconnect?.error?.output?.statusCode
@@ -72,24 +81,24 @@ class MessageController {
             }
           }
         }
-        else 
+        else
           closeSocket(socket, parentPort);
       }
     })
-    socket.ev.on("messages.update", async (update) => {
+    socket.ev.on("messages.upsert", async (update) => {
       console.log("update", update);
-      this.message_updates.append(update);
     })
   }
   
   async HandleSendMessageState(socket, customer, delaySeconds) {
+    const settings = this.dependencies.userProps.settings;
     const wpId = `${customer.phone}${this.baseIdName}`;
     if (this.isFile && this.isMessage) {
       sendFileAndMessage(socket, wpId, this.dependencies.files, this.dependencies.queue);
     } else if (this.isFile && !this.isMessage) {
       await sendFile(socket, wpId, this.dependencies.files, this.dependencies.queue);
     } else if (!this.isFile && this.isMessage) {
-      await sendMessage(socket, wpId);
+      await sendMessage(socket, wpId, this.dependencies.queue);
     }
     logger.Log(
       globalConfig.LogTypes.info,

@@ -18,8 +18,8 @@ const { QUEUE_STATUS, quequeModel } = require("../model/queque.types");
 
 class QueueController {
 
-  constructor(queue) {
-    this.queue = JSON.parse(queue);
+  constructor(queque) {
+    this.queue = JSON.parse(queque);
     this.currentUser = null;
     this.userDependencies = null;
     this.files = null;
@@ -28,6 +28,7 @@ class QueueController {
 
   async ExecuteProcess() {
     await mongoose.connect(globalConfig.mongo_url);
+    console.log(this.queue._id)
     logger.Log(globalConfig.LogTypes.info,
       globalConfig.LogLocations.consoleAndFile,
       `The Queque process executing for ${this.queue._id.toString()}]`)

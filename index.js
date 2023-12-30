@@ -25,8 +25,8 @@ const runScript = async () => {
         );
       });
       const currentDate = new Date();
-      const currentHour = currentDatet.getHours();
-      const currentMinute = currentDae.getMinutes();
+      const currentHour = currentDate.getHours();
+      const currentMinute = currentDate.getMinutes();
 
       const quequeList = await quequeModel.find({
         startDate: {
@@ -41,10 +41,10 @@ const runScript = async () => {
           queque.status = QUEUE_STATUS.IN_PROGRESS;
           const updatedQueue = await quequeModel.updateOne(
             {_id: queque._id.toString()},
-            {$set: queque}  
+              {$set:queque}
           );
           const worker = new Worker("./quequeManagement/quequeController.js", {
-            workerData: { queque: JSON.stringify(updatedQueue) },
+            workerData: { queque: JSON.stringify(queque) },
           });
           worker.postMessage('start');
           console.log(`THREAD ID: ${worker.threadId}`);
@@ -58,6 +58,7 @@ const runScript = async () => {
       }
     }
   } catch (error) {
+    console.log(error);
     logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.all, "Database Connection Error [CRITICAL]", error);
   }
 }

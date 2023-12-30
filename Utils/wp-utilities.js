@@ -12,13 +12,13 @@ const sendFile = async(socket, customer, files, queue) => {
     socket.cleanDirtyBits()
   }
 
-const sendMessage = async (socket, customer) => {
+const sendMessage = async (socket, customer, queue) => {
     // return success or fail
     const buttonMessage = {
       text:
-        this.dependencies.queue.quequeTitle +
+        queue.quequeTitle +
         "\n" +
-        this.dependencies.queue.quequeMessage,
+        queue.quequeMessage,
       footer: "Pro WhatsApp Web",
       headerType: 1,
     };
@@ -28,7 +28,7 @@ const sendMessage = async (socket, customer) => {
 
 const sendFileAndMessage = async(socket, customer, files, queue) => {
     await sendFile(socket, customer, files, queue);
-    await sendMessage(socket, customer);
+    await sendMessage(socket, customer, queue);
   }
 
 const checkAuthentication = async(logger, controller, session) => {
@@ -58,7 +58,8 @@ const handleMessageUpdates = async(updates, itemModel, queueModel, transactionMo
   
 }
 const closeSocket = (socket, parentPort) => {
-  socket.end();
-  parentPort.postMessage('terminate');
+    socket.removeListener("messages.update");
+    socket.end(undefined);
+    parentPort.postMessage('terminate');
 }
 module.exports = {closeSocket, sendFile, sendFileAndMessage, sendMessage, checkAuthentication}
