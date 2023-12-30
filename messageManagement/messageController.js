@@ -9,6 +9,7 @@ const {parentPort} = require('worker_threads');
 const {closeSocket, sendFile, sendMessage, sendFileAndMessage, checkAuthentication} = require('../Utils/wp-utilities');
 const { getRandomDelay, defineStatusCheckDelay} = require("../Utils/utilties");
 const { quequeModel, QUEUE_STATUS } = require("../model/queque.types");
+const { default: mongoose } = require("mongoose");
 
 
 class MessageController {
@@ -66,11 +67,10 @@ class MessageController {
       }
       else if (connection === 'open'){
         await saveCreds();
-        const queueCheck = await quequeModel.findOne({_id: this.dependencies.queue._id.toString()});
+        
         const settings = this.dependencies.userProps.settings;
-        if (this.counter < this.dependencies.queueItems.length)
-        {
-          for (const item of this.dependencies.queueItems) {
+        for (const item of this.dependencies.queueItems) {
+            console.log(this.counter)
             if (this.counter % this.checkStatusPerItem === 0)
             {
               const currentState = await quequeModel.findById(this.dependencies.queue._id.toString());
@@ -87,16 +87,17 @@ class MessageController {
             );
             if (customer) {
               await this.HandleSendMessageState(socket, customer, delaySeconds)
+              this.counter++;
             }
+          
           }
-        }
-        else
-        {
           this.dependencies.queue.status = QUEUE_STATUS.COMPLETED;
-          await quequeModel.updateOne(this.dependencies.queue._id.toString(),this.dependencies.queue)
-          closeSocket(socket, parentPort);
+          const updatedQueue = await quequeModel.updateOne(
+            {_id: this.dependencies.queue._id.toString()},
+              {$set:this.dependencies.queue}
+          );
+          closeSocket(socket, parentPort)
         }
-      }
     })
     socket.ev.on("messages.upsert", async (update) => {
       console.log("update", update);
@@ -119,7 +120,6 @@ class MessageController {
       `Message sent to [${customer._id.toString()}] by [${settings.userId}]`
     );
     await delay(delaySeconds * 1000);
-    this.counter++;
   }
 }
 module.exports = { MessageController };

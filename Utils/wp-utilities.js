@@ -58,7 +58,6 @@ const handleMessageUpdates = async(updates, itemModel, queueModel, transactionMo
   
 }
 const closeSocket = (socket, parentPort) => {
-    socket.removeListener("messages.update");
     socket.end(undefined);
     parentPort.postMessage('terminate');
 }
