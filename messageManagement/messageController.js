@@ -92,7 +92,11 @@ class MessageController {
           }
         }
         else
+        {
+          this.dependencies.queue.status = QUEUE_STATUS.COMPLETED;
+          await quequeModel.updateOne(this.dependencies.queue._id.toString(),this.dependencies.queue)
           closeSocket(socket, parentPort);
+        }
       }
     })
     socket.ev.on("messages.upsert", async (update) => {
