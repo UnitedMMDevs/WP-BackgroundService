@@ -67,9 +67,8 @@ class MessageController {
       else if (connection === 'open'){
         await saveCreds();
         const queueCheck = await quequeModel.findOne({_id: this.dependencies.queue._id.toString()});
-        const condition = (queueCheck.status !== QUEUE_STATUS.PAUSED)
         const settings = this.dependencies.userProps.settings;
-        if (this.counter < this.dependencies.queueItems.length && condition)
+        if (this.counter < this.dependencies.queueItems.length)
         {
           for (const item of this.dependencies.queueItems) {
             if (this.counter % this.checkStatusPerItem === 0)
