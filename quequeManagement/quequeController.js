@@ -99,7 +99,8 @@ class QueueController {
   async getQueueItems(queueId) {
     // getting all the customers added for this queque
     const quequeItems = await quequeItemModel.find({
-      quequeId: queueId
+      quequeId: queueId,
+      spendCredit: 0
     })
     return quequeItems;
   }

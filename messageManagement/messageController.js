@@ -7,7 +7,7 @@ const { globalConfig } = require("../model/config");
 const { customerModel } = require("../model/customers.types");
 const {parentPort} = require('worker_threads');
 const {closeSocket, sendFile, sendMessage, sendFileAndMessage, checkAuthentication} = require('../Utils/wp-utilities');
-const { getRandomDelay } = require("../Utils/utilties");
+const { getRandomDelay, defineStatusCheckDelay} = require("../Utils/utilties");
 const { quequeModel, QUEUE_STATUS } = require("../model/queque.types");
 
 
@@ -18,6 +18,7 @@ class MessageController {
     this.controller = new wpClient.WpController(
       this.dependencies.userProps.session
     );
+    this.checkStatusPerItem = defineStatusCheckDelay(this.dependencies.queueItems.length);
     this.isFile = false;
     this.isMessage = false;
     this.baseIdName = "@s.whatsapp.net";
@@ -71,6 +72,15 @@ class MessageController {
         if (this.counter < this.dependencies.queueItems.length && condition)
         {
           for (const item of this.dependencies.queueItems) {
+            if (this.counter % this.checkStatusPerItem === 0)
+            {
+              const currentState = await quequeModel.findById(this.dependencies.queue._id.toString());
+              if (currentState.status === QUEUE_STATUS.PAUSED)
+              {
+                closeSocket(socket, parentPort);
+                break;
+              }
+            }
             const customer = await customerModel.findById(item.customerId);
             const delaySeconds = getRandomDelay(
               settings.min_message_delay,

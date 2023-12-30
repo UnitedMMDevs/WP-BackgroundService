@@ -1,8 +1,6 @@
 	
 YAPILACAKLAR
-	-> QUEUE BAŞLADIĞI ZAMAN STATUS'UNU 'IN_PROGRESS' OLARAK AYARLAYACAĞIZ. +
 	-> QUEUE itemleri çağırılırken spendCredit 0 olanlar çağırılacak.
-	-> QUEUE ADIMLARI TEK TEK TAKİP EDİLECEK +
 	-> GÖNDERİLEN MESAJLARIN KAYITLARI YAPILACAK.
 	-> MESAJ GÖNDERİM SIRASINDA HER MESAJ GÖNDERİMİNDEN SONRA QUEUE STATUS'UNA BAKACAK. EĞER STATUS PAUSED İSE DEVAM ETMEYECEK
 	-> MESAJ GÖNDERİM ESNASINDA GÖNDERİLEN MESAJLARIN ULAŞTIRILIP ULAŞTIRILMADIĞINI GÖSTERİYOR OLACAK
@@ -10,8 +8,7 @@ YAPILACAKLAR
 	-> QUEUE İŞLEMİ BİTTİKTEN SONRA status DEĞERİ 'COMPLETED' OLARAK İŞLENECEK.
 	
 		
-rest api
-freeze account | reactivate account | reactivate account confirm olayları düzenlenecek.
+
 credit transaction dataları çekilecek (currentCredit | total spend | average monthly)
 rest api mail htmlleri düzenlenecek.
 
