@@ -15,10 +15,7 @@ const sendFile = async(socket, customer, files, queue) => {
 const sendMessage = async (socket, customer, queue) => {
     // return success or fail
     const buttonMessage = {
-      text:
-        queue.quequeTitle +
-        "\n" +
-        queue.quequeMessage,
+      text:queue.quequeMessage,
       footer: "Pro WhatsApp Web",
       headerType: 1,
     };
