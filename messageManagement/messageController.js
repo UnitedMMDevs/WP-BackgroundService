@@ -10,6 +10,7 @@ const {closeSocket, sendFile, sendMessage, sendFileAndMessage, checkAuthenticati
 const { getRandomDelay, defineStatusCheckDelay} = require("../Utils/utilties");
 const { quequeModel, QUEUE_STATUS } = require("../model/queque.types");
 const { default: mongoose } = require("mongoose");
+const events = require("worker/build/main/browser/events");
 
 
 class MessageController {
@@ -38,8 +39,7 @@ class MessageController {
       this.dependencies.queue.quequeTitle
     ) {
       this.isMessage = true;
-    }
-    
+    } 
   }
 
 
@@ -50,13 +50,16 @@ class MessageController {
     const socketOptions = {
       printQRInTerminal: false,
       auth: state,
-      receivedPendingNotifications: false,
+      receivedPendingNotifications: true,
       defaultQueryTimeoutMs: undefined,
-      markOnlineOnConnect: false,
+      markOnlineOnConnect: true,
       shouldIgnoreJid: jid => isJidBroadcast(jid),
       syncFullHistory: false
     };
     const socket = makeWASocket(socketOptions);
+    socket.ev.on('messages.update', (update) => {
+      console.log("here", update);
+    })
     socket.ev.on('connection.update', async({ connection, lastDisconnect }) => {
       const status = lastDisconnect?.error?.output?.statusCode
       if (connection === 'close'){
@@ -67,41 +70,39 @@ class MessageController {
       }
       else if (connection === 'open'){
         await saveCreds();
-        
-        const settings = this.dependencies.userProps.settings;
-        for (const item of this.dependencies.queueItems) {
-            console.log(this.counter)
-            if (this.counter % this.checkStatusPerItem === 0)
-            {
-              const currentState = await quequeModel.findById(this.dependencies.queue._id.toString());
-              if (currentState.status === QUEUE_STATUS.PAUSED)
+          const settings = this.dependencies.userProps.settings;
+          for (const item of this.dependencies.queueItems) {
+              if (this.counter % this.checkStatusPerItem === 0)
               {
-                closeSocket(socket, parentPort);
-                break;
+                const currentState = await quequeModel.findById(this.dependencies.queue._id.toString());
+                if (currentState.status === QUEUE_STATUS.PAUSED)
+                {
+                  closeSocket(socket, parentPort);
+                  break;
+                }
               }
+              const customer = await customerModel.findById(item.customerId);
+              const delaySeconds = getRandomDelay(
+                settings.min_message_delay,
+                settings.max_message_delay
+              );
+              if (customer) {
+              
+                await this.HandleSendMessageState(socket, customer, delaySeconds)
+                this.counter++;
+              }
+            
             }
-            const customer = await customerModel.findById(item.customerId);
-            const delaySeconds = getRandomDelay(
-              settings.min_message_delay,
-              settings.max_message_delay
+            this.dependencies.queue.status = QUEUE_STATUS.COMPLETED;
+            await quequeModel.updateOne(
+              {_id: this.dependencies.queue._id.toString()},
+                {$set:this.dependencies.queue}
             );
-            if (customer) {
-              await this.HandleSendMessageState(socket, customer, delaySeconds)
-              this.counter++;
-            }
           
-          }
-          this.dependencies.queue.status = QUEUE_STATUS.COMPLETED;
-          const updatedQueue = await quequeModel.updateOne(
-            {_id: this.dependencies.queue._id.toString()},
-              {$set:this.dependencies.queue}
-          );
-          closeSocket(socket, parentPort)
-        }
+          //closeSocket(socket, parentPort)    
+      }
     })
-    socket.ev.on("messages.upsert", async (update) => {
-      console.log("update", update);
-    })
+    
   }
   
   async HandleSendMessageState(socket, customer, delaySeconds) {

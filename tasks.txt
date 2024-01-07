@@ -3,14 +3,23 @@ YAPILACAKLAR
 	-> GÖNDERİLEN MESAJLARIN KAYITLARI YAPILACAK.
 	-> MESAJ GÖNDERİM ESNASINDA GÖNDERİLEN MESAJLARIN ULAŞTIRILIP ULAŞTIRILMADIĞINI GÖSTERİYOR OLACAK
 	-> HER BİR MESAJ GÖNDERİLDİKTEN SONRA QUEUE ITEMLER İÇİN SPENDCREDIT ÖZELLİĞİ TRUE YAPILACAK VE AYNI ZAMANDA CREDIT TRANSACTION VE USER'IN CREDIT SAYISI DÜŞÜRELECEK.
-	-> QUEUE İŞLEMİ BİTTİKTEN SONRA status DEĞERİ 'COMPLETED' OLARAK İŞLENECEK.
 	
 		
 
 credit transaction dataları çekilecek (currentCredit | total spend | average monthly)
-rest api mail htmlleri düzenlenecek.
+
+
+- sistem mesaj atarken tek resim ve yazi ise once resmi ekleyecek resmin altına mesaj atacak (orda karakter sınırı var onu kontrol edelim) bu islemi yaparsa 1 kontör düşsün.
+- resim 2 adet yada daha fazla ise once resimleri eklesin en son yazıyı ekleyerek gondersin
+- gönderilecek dosyalar. resim dosyası. jpg. png . ses dosyası whatsapp ses dosyasi pdf ve video dosyalarını atabilsinler
+- mesaj kuyruğa eklerken gonderim saati sorsun o saatde yada o tarih ve saatde başlasın
+- kuyruk da olan mesaji revize edebilsin görselide degistire bilsinler (PENDING ANINDA)
+- genel mesaj gonderin saati diye birsey vereceğiz sabah 9:00 aksam 22:00 gibi
+- kuyruklar bu sürelerde calisacak bu sürenin dışında kalirsa kendi durduracak
+
+
 
 
 front-end
 graylist blacklist kullanıcıları eklenecek.
-
+rest api mail htmlleri düzenlenecek.

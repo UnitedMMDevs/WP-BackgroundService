@@ -9,9 +9,11 @@ const sendFile = async(socket, customer, files, queue) => {
         image: { url: fullFilePath },
       });
     });
-    socket.cleanDirtyBits()
   }
 
+const sendMediaAndMessage = async (socket, customer, queue) => {
+
+}
 const sendMessage = async (socket, customer, queue) => {
     // return success or fail
     const buttonMessage = {
@@ -20,7 +22,6 @@ const sendMessage = async (socket, customer, queue) => {
       headerType: 1,
     };
     await socket.sendMessage(customer, buttonMessage);
-    socket.cleanDirtyBits()
   }
 
 const sendFileAndMessage = async(socket, customer, files, queue) => {
@@ -58,4 +59,4 @@ const closeSocket = (socket, parentPort) => {
     socket.end(undefined);
     parentPort.postMessage('terminate');
 }
-module.exports = {closeSocket, sendFile, sendFileAndMessage, sendMessage, checkAuthentication}
+module.exports = {closeSocket, sendFile, sendFileAndMessage, sendMessage, checkAuthentication, sendMediaAndMessage}
