@@ -1,0 +1,76 @@
+{
+  "total upserts": [
+    {
+      "messages": [
+        {
+          "key": {
+            "remoteJid": "905511197123@s.whatsapp.net",
+            "fromMe": true,
+            "id": "BAE53355780E2FE0"
+          },
+          "message": {
+            "extendedTextMessage": {
+              "text": "test"
+            }
+          },
+          "messageTimestamp": "1704819353",
+          "status": "PENDING"
+        }
+      ],
+      "type": "append"
+    },
+    {
+      "messages": [
+        {
+          "key": {
+            "remoteJid": "905511197123@s.whatsapp.net",
+            "fromMe": true,
+            "id": "BAE5BAE749FF20FE"
+          },
+          "message": {
+            "documentMessage": {
+              "url": "https://mmg.whatsapp.net/v/t62.7119-24/40137264_1534424360746726_8653606049013022520_n.enc?ccb=11-4&oh=01_AdRUbHsNvRct-hbN9D460MkyPGMSWRjKwH9zY36W5Ew0eA&oe=65C5044E&_nc_sid=5e03e0&mms3=true",
+              "mimetype": "application/pdf",
+              "fileSha256": "NpGQ3Bw916m4maC3qMNE0ZAk9sYX/RB/hefdZShOZ58=",
+              "fileLength": "98128",
+              "mediaKey": "qNW+l4mtSz0vqvi1w2WZVYsWbTHQ22pK1kSB3FjDu8c=",
+              "fileName": "file",
+              "fileEncSha256": "iPHmKpelT/pxh4xFqhQjoP2S49LRghx9Atnb8wstbws=",
+              "directPath": "/v/t62.7119-24/40137264_1534424360746726_8653606049013022520_n.enc?ccb=11-4&oh=01_AdRUbHsNvRct-hbN9D460MkyPGMSWRjKwH9zY36W5Ew0eA&oe=65C5044E&_nc_sid=5e03e0",
+              "mediaKeyTimestamp": "1704819355"
+            }
+          },
+          "messageTimestamp": "1704819355",
+          "status": "PENDING"
+        }
+      ],
+      "type": "append"
+    }
+  ],
+  "total updates": [
+    [
+      {
+        "key": {
+          "remoteJid": "905511197123@s.whatsapp.net",
+          "id": "BAE5BE8608FBD1F4",
+          "fromMe": true
+        },
+        "update": {
+          "status": 3
+        }
+      }
+    ],
+    [
+      {
+        "key": {
+          "remoteJid": "905511197123@s.whatsapp.net",
+          "id": "BAE53355780E2FE0",
+          "fromMe": true
+        },
+        "update": {
+          "status": 3
+        }
+      }
+    ]
+  ]
+}

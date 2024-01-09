@@ -29,7 +29,7 @@ class MessageController {
     this.baseIdName = "@s.whatsapp.net";
     this.isConnected = false;
     this.otomationUpdates = []
-    
+    this.otomationUpserts = []
     this.strategy = defineStrategy(this.queue.quequeMessage, this.files)
 
     this.controller = new wpClient.WpController(
@@ -60,11 +60,13 @@ class MessageController {
       }
     })
     this.socket.ev.on('creds.update', this.authConfig.saveCreds)
-    // this.socket.ev.on('messages.upsert', async (update) => {
-    //   console.log("upsert", JSON.stringify(update, undefined, 2))
-    // })
+    this.socket.ev.on('messages.upsert', async (update) => {
+      // console.log("upsert", JSON.stringify(update, undefined, 2))
+      this.otomationUpserts.push(update)
+    })
     this.socket.ev.on('messages.update', async (update) => {
-      console.log("update", JSON.stringify(update, undefined, 2))
+      // console.log("update", JSON.stringify(update, undefined, 2))
+      this.otomationUpdates.push(update)
     })
     setTimeout(async() => {
 
@@ -75,12 +77,14 @@ class MessageController {
   
   async ExecuteOtomation(){
     const settings = this.userProps.settings;
+    const delaySeconds = getRandomDelay(
+      settings.min_message_delay,
+      settings.max_message_delay
+    );
+    await delay(delaySeconds * 1000);
+    
     for (const item of this.queueItems) {
-      const delaySeconds = getRandomDelay(
-        settings.min_message_delay,
-        settings.max_message_delay
-      );
-      await delay(delaySeconds * 1000);
+      
       if (this.counter % this.checkStatusPerItem === 0)
       {
         const currentState = await quequeModel.findById(this.queue._id.toString());
@@ -101,6 +105,11 @@ class MessageController {
           `Message sent to [${customer._id.toString()}] by [${settings.userId}]`
         );
         this.counter++;
+        const delaySeconds = getRandomDelay(
+          settings.min_message_delay,
+          settings.max_message_delay
+        );
+        await delay(delaySeconds * 1000);
       }
     }
     this.queue.status = QUEUE_STATUS.COMPLETED;
@@ -108,11 +117,13 @@ class MessageController {
       {_id: this.queue._id.toString()},
         {$set:this.queue}
     );
+    console.log('total upserts :', JSON.stringify(this.otomationUpserts, undefined, 2))
+    console.log('total updates :', JSON.stringify(this.otomationUpdates, undefined, 2))
   }
   async SendDataToReceiver(currentReceiver){
     switch(this.strategy)
     {
-      case MESSAGE_STRATEGY.JUST_TEXT:
+      case MESSAGE_STRATEGY.JUST_TEXT: //OK
       {
         await sendMessage(this.socket, currentReceiver, this.queue.quequeMessage)
         break;
