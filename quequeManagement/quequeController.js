@@ -1,8 +1,8 @@
 const { workerData, parentPort, threadId } = require("worker_threads");
-const { globalConfig } = require("../model/config");
 const { quequeItemModel } = require("../model/quequeItem.types");
 const { userModel } = require("../model/user.types");
 const { creditsModel } = require("../model/credits.types");
+const { globalConfig } = require("../Utils/config");
 const { wpSessionCollection } = require("../model/wpSession.types")
 
 const {

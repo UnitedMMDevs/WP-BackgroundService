@@ -24,12 +24,12 @@ front-end
 graylist blacklist kullanıcıları eklenecek.
 rest api mail htmlleri düzenlenecek.
 
-
-updates [
+// okunmamis
+update [
   {
     "key": {
-      "remoteJid": "905386914400@s.whatsapp.net",
-      "id": "B74329256B4CF07F70D9C73D6DE18AD5",
+      "remoteJid": "905511197123@s.whatsapp.net",
+      "id": "BAE5222D7A32D903",
       "fromMe": true
     },
     "update": {
@@ -37,6 +37,39 @@ updates [
     }
   }
 ]
+// okunmus
+update [
+  {
+    "key": {
+      "remoteJid": "905511197123@s.whatsapp.net",
+      "id": "BAE5222D7A32D903",
+      "fromMe": true
+    },
+    "update": {
+      "status": 4
+    }
+  }
+]
+/////////
+upsert {
+  "messages": [
+    {
+      "key": {
+        "remoteJid": "905511197123@s.whatsapp.net",
+        "fromMe": true,
+        "id": "BAE5942081687696"
+      },
+      "message": {
+        "extendedTextMessage": {
+          "text": "test"
+        }
+      },
+      "messageTimestamp": "1704796146",
+      "status": "PENDING"
+    }
+  ],
+  "type": "append"
+}
 
 async ExecuteProcess() {
     const { state, saveCreds } = await checkAuthentication(logger, this.controller, this.dependencies.userProps.session);

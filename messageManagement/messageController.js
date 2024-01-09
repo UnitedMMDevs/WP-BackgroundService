@@ -1,16 +1,16 @@
 const fs = require("fs");
-const { makeWASocket, DisconnectReason, delay, isJidBroadcast } = require("@whiskeysockets/baileys");
+const { makeWASocket, delay } = require("@whiskeysockets/baileys");
 
 const wpClient = require("./wpController");
 const { logger } = require("../Utils/logger");
-const { globalConfig } = require("../model/config");
 const { customerModel } = require("../model/customers.types");
 const {parentPort} = require('worker_threads');
-const {closeSocket, sendFile, sendMessage, sendFileAndMessage, checkAuthentication, generateSocketOptions} = require('../Utils/wp-utilities');
-const { getRandomDelay, defineStatusCheckDelay} = require("../Utils/utilties");
+const {closeSocket, sendMedia, sendMessage, sendFileAndMessage, checkAuthentication, generateSocketOptions, MESSAGE_STATUS, MESSAGE_STRATEGY, FILE_TYPE, sendMediaAndContentMessage, sendFile} = require('../Utils/wp-utilities');
+const { getRandomDelay, defineStatusCheckDelay, defineStrategy, getFileType, isMedia} = require("../Utils/utilties");
 const { quequeModel, QUEUE_STATUS } = require("../model/queque.types");
 const { default: mongoose } = require("mongoose");
 const events = require("worker/build/main/browser/events");
+const { globalConfig } = require("../Utils/config");
 
 
 class MessageController {
@@ -30,6 +30,8 @@ class MessageController {
     this.isConnected = false;
     this.otomationUpdates = []
     
+    this.strategy = defineStrategy(this.queue.quequeMessage, this.files)
+
     this.controller = new wpClient.WpController(
       this.userProps.session
     );
@@ -58,9 +60,9 @@ class MessageController {
       }
     })
     this.socket.ev.on('creds.update', this.authConfig.saveCreds)
-    this.socket.ev.on('messages.upsert', async (update) => {
-      console.log("upsert", JSON.stringify(update, undefined, 2))
-    })
+    // this.socket.ev.on('messages.upsert', async (update) => {
+    //   console.log("upsert", JSON.stringify(update, undefined, 2))
+    // })
     this.socket.ev.on('messages.update', async (update) => {
       console.log("update", JSON.stringify(update, undefined, 2))
     })
@@ -69,8 +71,6 @@ class MessageController {
     }, 5000);
     if(this.CheckConnectionSuccess())
       await this.ExecuteOtomation()
-
-
   }
   
   async ExecuteOtomation(){
@@ -110,7 +110,77 @@ class MessageController {
     );
   }
   async SendDataToReceiver(currentReceiver){
-    await sendMessage(this.socket, currentReceiver, this.queue.quequeMessage)
+    switch(this.strategy)
+    {
+      case MESSAGE_STRATEGY.JUST_TEXT:
+      {
+        await sendMessage(this.socket, currentReceiver, this.queue.quequeMessage)
+        break;
+      }
+      case MESSAGE_STRATEGY.JUST_FILE: // OK
+      {
+       const extension = getFileType(this.files[0])
+       const file_type = isMedia(extension)
+       const fullFilePath = `${globalConfig.baseRootPath
+       }${this.queue._id.toString()}/${this.files[0]}`;
+       if(file_type === FILE_TYPE.MEDIA)
+        await sendMedia(this.socket, currentReceiver, fullFilePath, extension)
+       else {
+        await sendFile(this.socket, currentReceiver, fullFilePath, extension)
+       }
+       break;
+      }
+      case MESSAGE_STRATEGY.MULTIPLE_FILE: // OK
+      {
+        console.log("here")
+        this.files.map(async(file) => {
+          const extension = getFileType(file)
+          const file_type = isMedia(extension)
+          const fullFilePath = `${globalConfig.baseRootPath
+          }${this.queue._id.toString()}/${file}`;
+          if(file_type === FILE_TYPE.MEDIA)
+           await sendMedia(this.socket, currentReceiver, fullFilePath, extension)
+          else{
+            await sendFile(this.socket, currentReceiver, fullFilePath, extension)
+          }
+        })
+        break;
+      }
+      case MESSAGE_STRATEGY.MULTIPLE_FILE_MESSAGE: // OK
+      {
+        await sendMessage(this.socket, currentReceiver, this.queue.quequeMessage)
+        this.files.map(async(file) => {
+          const extension = getFileType(file)
+          const file_type = isMedia(extension)
+          const fullFilePath = `${globalConfig.baseRootPath
+          }${this.queue._id.toString()}/${file}`;
+          if(file_type === FILE_TYPE.MEDIA)
+           await sendMedia(this.socket, currentReceiver, fullFilePath, extension)
+          else {
+           
+            await sendFile(this.socket, currentReceiver, fullFilePath, extension)
+          }  
+        })
+        break;
+      }
+      case MESSAGE_STRATEGY.ONE_FILE_MESSAGE: // OK
+      {
+        const extension = getFileType(this.files[0])
+        const file_type = isMedia(extension)
+        const fullFilePath = `${globalConfig.baseRootPath
+        }${this.queue._id.toString()}/${this.files[0]}`;
+        if(file_type === FILE_TYPE.FILE)
+        {
+          await sendMessage(this.socket, currentReceiver, this.queue.quequeMessage)
+          await sendFile(this.socket, currentReceiver, fullFilePath, extension)
+        }
+        else
+        {
+          await sendMediaAndContentMessage(this.socket, currentReceiver, fullFilePath, extension, this.queue.quequeMessage)
+        }
+        break;
+      }
+    }
   }
 }
 module.exports = { MessageController };

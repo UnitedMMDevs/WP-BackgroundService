@@ -3,7 +3,7 @@ const winston = require('winston');
 const dailyRotateFile = require('winston-daily-rotate-file');
 const path = require('path');
 const fs = require('fs');
-const {globalConfig} = require('../model/config');
+const { globalConfig } = require('./config');
 
 
 class ConsoleLogger {

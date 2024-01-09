@@ -3,13 +3,12 @@ const { logger } = require('./Utils/logger');
 const {
   Worker,
   isMainThread,
-  parentPort,
-  workerData,
 } = require("worker_threads");
 
 const { quequeSchema, quequeModel, QUEUE_STATUS } = require("./model/queque.types");
 const mongoose = require("mongoose");
-const { globalConfig } = require('./model/config');
+const { globalConfig } = require("./Utils/config");
+
 const runScript = async () => {
   try {
     if (isMainThread) {
@@ -63,15 +62,13 @@ const runScript = async () => {
   }
 }
 process.on('SIGINT', async() => {
-  await mongoose.connection.close(() => {
-    logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.console, 'Database connection has been closed.');
-    process.exit(0);
-  });
+  await mongoose.connection.close(false);
+  logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.console, 'Database connection has been closed.');
+  process.exit(0);
 });
 
 // schedule.scheduleJob("*/1 * * * *", async function() {
 //   await runScript();
 // });
-runScript();
 
-
+runScript()

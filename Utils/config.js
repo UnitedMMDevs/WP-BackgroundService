@@ -1,6 +1,11 @@
 const path = require('path');
 const os = require('os');
-const {getRootPath} = require('../Utils/utilties');
+
+getRootPath = () => {
+    const filepath = `${path.parse(os.homedir()).root}home/.sandbox/`;
+    return filepath;
+}
+
 const globalConfig = {
     mongo_url: "mongodb://127.0.0.1:27017/proWhatsApp",
     baseRootPath: getRootPath(),
@@ -18,5 +23,4 @@ const globalConfig = {
         file: 'FILE',
     }
 }
-
-module.exports = {globalConfig};
+module.exports = { globalConfig };

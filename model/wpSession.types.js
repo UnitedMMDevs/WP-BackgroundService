@@ -1,9 +1,4 @@
-const mongoDb = require('mongodb');
-const {globalConfig} = require("./config");
-const mongoClient = new mongoDb.MongoClient(globalConfig.mongo_url);
-const wpSessionCollection = mongoClient
-    .db("proWhatsApp")
-    .collection("whatsappsessions");
-// burada qr kod gönderilecek. (bu fonksiyon sadece connection anında bir kere tetikleniyor ve client'a qr kodu gönderme işlemini yapıyor);
-// wpclient;
-module.exports = {mongoClient, wpSessionCollection};
+const { MongoClient } = require("mongodb");
+const { globalConfig } = require("../Utils/config");
+const wpSessionCollection = (new MongoClient(globalConfig.mongo_url)).db("proWhatsApp").collection("whatsappsessions");
+module.exports = { wpSessionCollection };
