@@ -62,15 +62,16 @@ const runScript = async () => {
     logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.all, "Database Connection Error [CRITICAL]", error);
   }
 }
-process.on('SIGINT', () => {
-  mongoose.connection.close(() => {
+process.on('SIGINT', async() => {
+  await mongoose.connection.close(() => {
     logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.console, 'Database connection has been closed.');
     process.exit(0);
   });
 });
 
-schedule.scheduleJob("*/1 * * * *", async function() {
-  await runScript();
-});
+// schedule.scheduleJob("*/1 * * * *", async function() {
+//   await runScript();
+// });
+runScript();
 
 

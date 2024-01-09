@@ -36,7 +36,8 @@ class QueueController {
     if (dependencies) {
       this.queue.status = QUEUE_STATUS.IN_PROGRESS;
       await quequeModel.updateOne({_id: this.queue._id}, this.queue);
-      await (new MessageController(dependencies)).ExecuteProcess();
+      let messageController = new MessageController(dependencies)
+      await messageController.InitializeSocket();
     }
   }
   async InitializeDependencies() {

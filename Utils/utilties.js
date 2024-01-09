@@ -8,6 +8,7 @@ getRootPath = () => {
 getRandomDelay = (min, max) => {
     return Math.random() * (max - min) + min;
 }
+
 const defineStatusCheckDelay = (totalItemCount) =>
 {
     if(totalItemCount < 100)
@@ -22,6 +23,10 @@ const defineStatusCheckDelay = (totalItemCount) =>
     {
         return 20;
     }
+}
+
+const defineStrategy = (deps) => {
+
 }
 
 module.exports =  { getRootPath, getRandomDelay, defineStatusCheckDelay};
