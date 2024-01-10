@@ -268,7 +268,6 @@ class MessageController {
 
     let spendCount = 0;
     let extendedMessagesForCustomers = []
-    console.log(JSON.stringify(mergedData, undefined, 2))
     mergedData.map((mergedItem) => {
       if(mergedItem.remoteJid === `${currentCustomer.phone}${this.baseIdName}`)
       {
@@ -301,7 +300,6 @@ class MessageController {
         extendedMessagesForCustomers.push(info)
       }
     })
-    console.log(JSON.stringify(extendedMessagesForCustomers, undefined, 2))
     logger.Log(
       globalConfig.LogTypes.info,
       globalConfig.LogLocations.consoleAndFile,
@@ -314,18 +312,18 @@ class MessageController {
     await quequeItemModel.updateOne({_id: queueItem._id}, queueItem)
     this.userProps.credit.totalAmount -= spendCount
     await creditsModel.updateOne({_id: this.userProps.credit._id}, this.userProps.credit)
-    await creditTransactionModel.create({
-      user_id: this.userProps.credit.userId.toString(),
-      amount: spendCount,
-      transaction_date: new Date(Date.now()),
-      transaction_type: "spent"
-    })
+    if(spendCount > 0)
+      await creditTransactionModel.create({
+        user_id: this.userProps.credit.userId.toString(),
+        amount: spendCount,
+        transaction_date: new Date(Date.now()),
+        transaction_type: "spent"
+      })
     logger.Log(
       globalConfig.LogTypes.info,
       globalConfig.LogLocations.all,
       `Credit Transaction created. | SPENT | ${this.queue.userId}`
     );
-    this.userProps.credit.totalAmount -= spendCount;
   }
 }
 module.exports = { MessageController };

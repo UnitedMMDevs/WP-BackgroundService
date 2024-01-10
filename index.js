@@ -66,9 +66,6 @@ process.on('SIGINT', async() => {
   logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.console, 'Database connection has been closed.');
   process.exit(0);
 });
-
-// schedule.scheduleJob("*/1 * * * *", async function() {
-//   await runScript();
-// });
-
-runScript()
+schedule.scheduleJob("*/1 * * * *", async function() {
+  await runScript();
+});
