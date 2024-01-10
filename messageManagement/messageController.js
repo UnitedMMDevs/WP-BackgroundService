@@ -11,6 +11,7 @@ const { quequeModel, QUEUE_STATUS } = require("../model/queque.types");
 const { default: mongoose } = require("mongoose");
 const events = require("worker/build/main/browser/events");
 const { globalConfig } = require("../Utils/config");
+const { seperateDataFromUpdate, seperateDataFromUpsert, mergeUpsertUpdateData } = require("../modules/handleUpdateEventObject");
 
 
 class MessageController {
@@ -60,13 +61,21 @@ class MessageController {
       }
     })
     this.socket.ev.on('creds.update', this.authConfig.saveCreds)
-    this.socket.ev.on('messages.upsert', async (update) => {
-      // console.log("upsert", JSON.stringify(update, undefined, 2))
-      this.otomationUpserts.push(update)
-    })
     this.socket.ev.on('messages.update', async (update) => {
-      // console.log("update", JSON.stringify(update, undefined, 2))
-      this.otomationUpdates.push(update)
+      const seperatedData = seperateDataFromUpdate(update)
+      const uniqueSeperatedData = seperatedData.filter((item) => 
+      {
+        return !this.otomationUpdates.some((targetItem) => ((targetItem.remoteJid === item.remoteJid) && (targetItem.id === item.id)))
+      })
+      this.otomationUpdates.push(...uniqueSeperatedData);
+    })
+    this.socket.ev.on('messages.upsert', async (update) => {
+      const seperatedData = seperateDataFromUpsert(update);
+      const uniqueSeperatedData = seperatedData.filter((item) => 
+      {
+        return !this.otomationUpdates.some((targetItem) => ((targetItem.remoteJid === item.remoteJid) && (targetItem.id === item.id)))
+      })
+      this.otomationUpserts.push(...uniqueSeperatedData);     
     })
     setTimeout(async() => {
 
@@ -82,9 +91,7 @@ class MessageController {
       settings.max_message_delay
     );
     await delay(delaySeconds * 1000);
-    
     for (const item of this.queueItems) {
-      
       if (this.counter % this.checkStatusPerItem === 0)
       {
         const currentState = await quequeModel.findById(this.queue._id.toString());
@@ -110,6 +117,10 @@ class MessageController {
           settings.max_message_delay
         );
         await delay(delaySeconds * 1000);
+        const mergedData = mergeUpsertUpdateData(this.otomationUpserts, this.otomationUpdates)
+        console.log(JSON.stringify(mergedData, undefined, 2))
+        this.otomationUpdates = []
+        this.otomationUpserts = []
       }
     }
     this.queue.status = QUEUE_STATUS.COMPLETED;
@@ -117,9 +128,9 @@ class MessageController {
       {_id: this.queue._id.toString()},
         {$set:this.queue}
     );
-    console.log('total upserts :', JSON.stringify(this.otomationUpserts, undefined, 2))
-    console.log('total updates :', JSON.stringify(this.otomationUpdates, undefined, 2))
+
   }
+  
   async SendDataToReceiver(currentReceiver){
     switch(this.strategy)
     {
@@ -192,6 +203,10 @@ class MessageController {
         break;
       }
     }
+  }
+
+  async AnalyseReceiverDataAndSave(mergedData){
+  
   }
 }
 module.exports = { MessageController };
