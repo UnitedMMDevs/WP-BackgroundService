@@ -166,7 +166,7 @@ class MessageController {
         );
         await delay(delaySeconds * 1000);
         const mergedData = mergeUpsertUpdateData(this.otomationUpserts, this.otomationUpdates)
-        await this.AnalyseReceiverDataAndSave(mergedData, customer, item)
+        await this.AnalysisReceiverDataAndSave(mergedData, customer, item)
         this.otomationUpdates = []
         this.otomationUpserts = []
       }
@@ -258,7 +258,7 @@ class MessageController {
     }
   }
 
-  async AnalyseReceiverDataAndSave(mergedData, currentCustomer, queueItem){
+  async AnalysisReceiverDataAndSave(mergedData, currentCustomer, queueItem){
     // toplanan mesajlarin icinde zaten remoteJid , fromMe degeleri bulunuyor 
     // gonderilen mesajlarin status degelerine bakilarak eger gonderim islemi var ise
     // kredi ayarlamasi yapiliyor olacak o queueItem icin kredi harcamasi girilecek
