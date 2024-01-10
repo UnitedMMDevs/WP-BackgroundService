@@ -1,19 +1,42 @@
 const fs = require("fs");
 const { makeWASocket, delay } = require("@whiskeysockets/baileys");
 
+const {
+  closeSocket, 
+  sendMedia, 
+  sendMessage, 
+  sendFileAndMessage, 
+  checkAuthentication, 
+  generateSocketOptions, 
+  MESSAGE_STATUS, 
+  MESSAGE_STRATEGY, 
+  FILE_TYPE, 
+  sendMediaAndContentMessage, 
+  sendFile
+} = require('../Utils/wp-utilities');
+const { 
+  getRandomDelay, 
+  defineStatusCheckDelay, 
+  defineStrategy, 
+  getFileType, 
+  isMedia
+} = require("../Utils/utilties");
+const { 
+  seperateDataFromUpdate, 
+  seperateDataFromUpsert, 
+  mergeUpsertUpdateData 
+} = require("../modules/handleUpdateEventObject");
+const { quequeModel, QUEUE_STATUS } = require("../model/queque.types");
+const events = require("worker/build/main/browser/events");
+const { globalConfig } = require("../Utils/config");
 const wpClient = require("./wpController");
 const { logger } = require("../Utils/logger");
 const { customerModel } = require("../model/customers.types");
 const {parentPort} = require('worker_threads');
-const {closeSocket, sendMedia, sendMessage, sendFileAndMessage, checkAuthentication, generateSocketOptions, MESSAGE_STATUS, MESSAGE_STRATEGY, FILE_TYPE, sendMediaAndContentMessage, sendFile} = require('../Utils/wp-utilities');
-const { getRandomDelay, defineStatusCheckDelay, defineStrategy, getFileType, isMedia} = require("../Utils/utilties");
-const { quequeModel, QUEUE_STATUS } = require("../model/queque.types");
-const { default: mongoose } = require("mongoose");
-const events = require("worker/build/main/browser/events");
-const { globalConfig } = require("../Utils/config");
-const { seperateDataFromUpdate, seperateDataFromUpsert, mergeUpsertUpdateData } = require("../modules/handleUpdateEventObject");
-
-
+const { quequeItemModel } = require("../model/quequeItem.types");
+const { creditTransactionModel } = require("../model/creditTransaction.types");
+const { userModel } = require("../model/user.types");
+const { creditsModel } = require("../model/credits.types");
 class MessageController {
   constructor({
     queue,
@@ -44,6 +67,10 @@ class MessageController {
   }
 
   async InitializeSocket() {
+    logger.Log(globalConfig.LogTypes.info,
+      globalConfig.LogLocations.consoleAndFile,
+      `Socket initializing process start...`
+    )
     this.authConfig = await checkAuthentication(logger, this.controller, this.userProps.session);
     if (!this.authConfig.state && !this.authConfig.saveCreds) return;
     const socketOptions = generateSocketOptions(this.authConfig.state)
@@ -53,15 +80,27 @@ class MessageController {
       if (connection === 'close'){
           if (status !== 403 && status === 401 && !status){
             this.InitializeSocket()
+            logger.Log(globalConfig.LogTypes.info,
+              globalConfig.LogLocations.consoleAndFile,
+              `Service retry connect to [${this.userProps.credit.userId.toString()}]'s Whatsapp account successfully`
+            )
           }
       }
       else if (connection === 'open'){
         await this.authConfig.saveCreds()
+        logger.Log(globalConfig.LogTypes.info,
+          globalConfig.LogLocations.consoleAndFile,
+          `Service Connected to [${this.userProps.credit.userId.toString()}]'s Whatsapp account successfully`
+        )
         this.isConnected = true;
       }
     })
     this.socket.ev.on('creds.update', this.authConfig.saveCreds)
     this.socket.ev.on('messages.update', async (update) => {
+      logger.Log(globalConfig.LogTypes.info,
+        globalConfig.LogLocations.console,
+        `Service proccessing update data for messages... | queue => [${this.queue._id.toString()}]`
+      )
       const seperatedData = seperateDataFromUpdate(update)
       const uniqueSeperatedData = seperatedData.filter((item) => 
       {
@@ -70,6 +109,10 @@ class MessageController {
       this.otomationUpdates.push(...uniqueSeperatedData);
     })
     this.socket.ev.on('messages.upsert', async (update) => {
+      logger.Log(globalConfig.LogTypes.info,
+        globalConfig.LogLocations.console,
+        `Service proccessing upsert data for messages... | queue => [${this.queue._id.toString()}]`
+      )
       const seperatedData = seperateDataFromUpsert(update);
       const uniqueSeperatedData = seperatedData.filter((item) => 
       {
@@ -82,6 +125,11 @@ class MessageController {
     }, 5000);
     if(this.CheckConnectionSuccess())
       await this.ExecuteOtomation()
+    else
+      logger.Log(globalConfig.LogTypes.warn,
+        globalConfig.LogLocations.all,
+        `User WP Account Connection error | ${this.queue.userId.toString()} , Session : [${this.userProps.session}]`
+      )
   }
   
   async ExecuteOtomation(){
@@ -118,7 +166,7 @@ class MessageController {
         );
         await delay(delaySeconds * 1000);
         const mergedData = mergeUpsertUpdateData(this.otomationUpserts, this.otomationUpdates)
-        console.log(JSON.stringify(mergedData, undefined, 2))
+        await this.AnalyseReceiverDataAndSave(mergedData, customer, item)
         this.otomationUpdates = []
         this.otomationUpserts = []
       }
@@ -128,18 +176,24 @@ class MessageController {
       {_id: this.queue._id.toString()},
         {$set:this.queue}
     );
-
+    logger.Log(
+      globalConfig.LogTypes.info,
+      globalConfig.LogLocations.all,
+      `The Queue has been completed. 
+      | USER [${this.queue.userId}] 
+      | QUEUE [${this.queue._id.toString()}] | SESSION [${this.userProps.session}]`
+    );
   }
   
   async SendDataToReceiver(currentReceiver){
     switch(this.strategy)
     {
-      case MESSAGE_STRATEGY.JUST_TEXT: //OK
+      case MESSAGE_STRATEGY.JUST_TEXT: //OK 1 credit
       {
         await sendMessage(this.socket, currentReceiver, this.queue.quequeMessage)
         break;
       }
-      case MESSAGE_STRATEGY.JUST_FILE: // OK
+      case MESSAGE_STRATEGY.JUST_FILE: // OK 1 credit
       {
        const extension = getFileType(this.files[0])
        const file_type = isMedia(extension)
@@ -152,9 +206,8 @@ class MessageController {
        }
        break;
       }
-      case MESSAGE_STRATEGY.MULTIPLE_FILE: // OK
+      case MESSAGE_STRATEGY.MULTIPLE_FILE:
       {
-        console.log("here")
         this.files.map(async(file) => {
           const extension = getFileType(file)
           const file_type = isMedia(extension)
@@ -168,7 +221,7 @@ class MessageController {
         })
         break;
       }
-      case MESSAGE_STRATEGY.MULTIPLE_FILE_MESSAGE: // OK
+      case MESSAGE_STRATEGY.MULTIPLE_FILE_MESSAGE:
       {
         await sendMessage(this.socket, currentReceiver, this.queue.quequeMessage)
         this.files.map(async(file) => {
@@ -185,7 +238,7 @@ class MessageController {
         })
         break;
       }
-      case MESSAGE_STRATEGY.ONE_FILE_MESSAGE: // OK
+      case MESSAGE_STRATEGY.ONE_FILE_MESSAGE:
       {
         const extension = getFileType(this.files[0])
         const file_type = isMedia(extension)
@@ -205,8 +258,74 @@ class MessageController {
     }
   }
 
-  async AnalyseReceiverDataAndSave(mergedData){
-  
+  async AnalyseReceiverDataAndSave(mergedData, currentCustomer, queueItem){
+    // toplanan mesajlarin icinde zaten remoteJid , fromMe degeleri bulunuyor 
+    // gonderilen mesajlarin status degelerine bakilarak eger gonderim islemi var ise
+    // kredi ayarlamasi yapiliyor olacak o queueItem icin kredi harcamasi girilecek
+    // queueItem message_status u girilecek
+    // creditTransaction girisi yapilacak
+    // user dan kredi dusulmesi yapilacak
+
+    let spendCount = 0;
+    let extendedMessagesForCustomers = []
+    console.log(JSON.stringify(mergedData, undefined, 2))
+    mergedData.map((mergedItem) => {
+      if(mergedItem.remoteJid === `${currentCustomer.phone}${this.baseIdName}`)
+      {
+        let info = {
+          sent_at: undefined,
+          status: undefined,
+          message: undefined,
+        }
+        info.sent_at = new Date(mergedItem.sendAt.low * 1000)
+        info.message = Object.keys(mergedItem.message)[0]
+        if(mergedItem.status === MESSAGE_STATUS.ERROR)
+        {
+          spendCount += 0;
+          info.status = "Not Sent"
+          
+        }
+        else {
+          spendCount += 1
+          if (mergedItem.status === MESSAGE_STATUS.DELIVERY_ACK)
+            info.status = "Sent"
+          else if(mergedItem.status === MESSAGE_STATUS.PENDING)
+            info.status = "Pending"
+          else if(mergedItem.status === MESSAGE_STATUS.PLAYED)
+            info.status = "Played"
+          else if(mergedItem.status === MESSAGE_STATUS.READ)
+            info.status = "Read"
+          else if(mergedItem.status === MESSAGE_STATUS.SERVER_ACK)
+            info.status = "Sent"
+        }
+        extendedMessagesForCustomers.push(info)
+      }
+    })
+    console.log(JSON.stringify(extendedMessagesForCustomers, undefined, 2))
+    logger.Log(
+      globalConfig.LogTypes.info,
+      globalConfig.LogLocations.consoleAndFile,
+      `Proccessing data for receiver info |
+       User => ${this.queue.userId} | Queue => ${this.queue._id.toString()}
+       | Customer => ${this.queueItems.customerId}`
+    );
+    queueItem.spendCredit = spendCount;
+    queueItem.message_status = JSON.stringify(extendedMessagesForCustomers, undefined, 2)
+    await quequeItemModel.updateOne({_id: queueItem._id}, queueItem)
+    this.userProps.credit.totalAmount -= spendCount
+    await creditsModel.updateOne({_id: this.userProps.credit._id}, this.userProps.credit)
+    await creditTransactionModel.create({
+      user_id: this.userProps.credit.userId.toString(),
+      amount: spendCount,
+      transaction_date: new Date(Date.now()),
+      transaction_type: "spent"
+    })
+    logger.Log(
+      globalConfig.LogTypes.info,
+      globalConfig.LogLocations.all,
+      `Credit Transaction created. | SPENT | ${this.queue.userId}`
+    );
+    this.userProps.credit.totalAmount -= spendCount;
   }
 }
 module.exports = { MessageController };

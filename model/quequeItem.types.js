@@ -1,8 +1,4 @@
 const mongoose = require('mongoose');
-
-
-
-
 const quequeItemSchema = new mongoose.Schema({
     quequeId: {
         type: String,

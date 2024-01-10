@@ -13,6 +13,7 @@ const seperateDataFromUpdate = (update) => {
     })
     return seperatedArray;
 }
+
 const seperateDataFromUpsert = (upsert) => {
     let seperatedArray = [];
     const message = upsert.messages[0];
@@ -47,6 +48,7 @@ const mergeUpsertUpdateData = (upsertData, updateData) => {
 
     return mergedData;
 };
+
 module.exports = {
     seperateDataFromUpdate,
     seperateDataFromUpsert,

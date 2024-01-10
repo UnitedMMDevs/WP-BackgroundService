@@ -19,7 +19,7 @@ class ConsoleLogger {
                     })
                 ),
                 defaultMeta: {
-                    service: "Pro-Whats-App-Service"
+                    service: "Pro-WhatsApp-Queue-Service"
                 }
             }
         )
@@ -32,7 +32,7 @@ class ConsoleLogger {
 class FileLogger {
     
     constructor() {
-        this.logPath = path.join(__dirname, 'logs');
+        this.logPath = path.join(__dirname, '../logs/');
         if(!fs.existsSync(this.logPath))
             fs.mkdirSync(this.logPath); 
         this.logger = winston.createLogger(
@@ -46,14 +46,13 @@ class FileLogger {
                 })],
 
                 format: winston.format.combine(
-                    winston.format.colorize(),
                     winston.format.timestamp(),
                     winston.format.printf(({ timestamp, level, message, service }) => {
                         return `[${timestamp}] [${service}]-[${level.toUpperCase()}] => [${message}]]`
                     })
                 ),
                 defaultMeta: {
-                    service: "Pro-Whats-App-Service"
+                    service: "Pro-WhatsApp-Queue-Service"
                 }
             }
         )
@@ -74,7 +73,7 @@ class DbLogger {
                 })],
                 format: winston.format.json(),
                 defaultMeta: {
-                    service: "Pro-Whats-App-Service"
+                    service: "Pro-WhatsApp-Queue-Service"
                 }
             }
         )
@@ -86,8 +85,6 @@ class DbLogger {
 
 
 class LoggerService {
-
-
     constructor(
         fileLogger, 
         dbLogger, 

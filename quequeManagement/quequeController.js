@@ -28,7 +28,6 @@ class QueueController {
 
   async ExecuteProcess() {
     await mongoose.connect(globalConfig.mongo_url);
-    console.log(this.queue._id)
     logger.Log(globalConfig.LogTypes.info,
       globalConfig.LogLocations.consoleAndFile,
       `The Queque process executing for ${this.queue._id.toString()}]`)
@@ -58,7 +57,7 @@ class QueueController {
       this.userDependencies = await this.getUserDependencies(this.currentUser._id.toString());
       this.files = await this.getFiles(this.queue._id.toString());
       this.queueItems = await this.getQueueItems(this.queue._id.toString());
-
+      
       return {
         queue: this.queue,
         userProps: this.userDependencies,

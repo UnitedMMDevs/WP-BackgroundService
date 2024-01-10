@@ -84,8 +84,6 @@ const sendFile = async (socket, receiver, file, file_type) => {
   }
 }
 const sendMediaAndContentMessage = async (socket, receiver, media, file_type, message) => {
-  console.log(media)
-  console.log(file_type)
   if(file_type === ".jpg" || file_type === ".png" || file_type === ".jpeg")
   {
     await socket.sendMessage(receiver, {image: {url: media}, caption: message})
