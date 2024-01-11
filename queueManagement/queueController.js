@@ -100,7 +100,8 @@ class QueueController {
     // getting all the customers added for this queue
     const queueItems = await queueItemModel.find({
       queueId: queueId,
-      spendCredit: 0
+      spendCredit: 0,
+      message_status: ""
     })
     return queueItems;
   }

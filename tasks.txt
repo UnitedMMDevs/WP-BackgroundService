@@ -8,21 +8,15 @@ YAPILACAKLAR
 - gönderilecek dosyalar. resim dosyası. jpg. png . ses dosyası whatsapp ses dosyasi pdf ve video dosyalarını atabilsinler OK
 - mesaj kuyruğa eklerken gonderim saati sorsun o saatde yada o tarih ve saatde başlasın OK 
 - kuyruk da olan mesaji revize edebilsin görselide degistire bilsinler (PENDING ANINDA) OK
-
-
-
 queue olusturma sirasinda kredinin yeterli olup olmadigina bakacagim OK
 queue musteri ekleme kisminda kredi yeterliligine bakicam OK
 butun update islemlerindeki kredi yeterlilik hesaplamasina bakacagim OK
 butun queque yanlis adlandirmalarinin hepsi duzeltilecek OK
 queue pending aninda yeni dosya ekleme ozelligi ekleyecegim yine kredi yeterliligine bakacagim OK
-
-
-
 credit transaction dataları çekilecek (currentCredit | total spend | average monthly) OK
--serviste credit transaction islemi kuyruk butun kullanicilara mesaj gonderme islemini bitirdikten sonra eklenecek
+-serviste credit transaction islemi kuyruk butun kullanicilara mesaj gonderme islemini bitirdikten sonra eklenecek OK 
 
-
+- admin endpoints
 -group kismi duzenlenecek
 - activities entegre edilecek
 
