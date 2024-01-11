@@ -5,7 +5,7 @@ const {
   isMainThread,
 } = require("worker_threads");
 
-const { quequeSchema, quequeModel, QUEUE_STATUS } = require("./model/queque.types");
+const { queueSchema, queueModel, QUEUE_STATUS } = require("./model/queue.types");
 const mongoose = require("mongoose");
 const { globalConfig } = require("./Utils/config");
 
@@ -14,7 +14,7 @@ const runScript = async () => {
     if (isMainThread) {
       logger.Log(globalConfig.LogTypes.info,
         globalConfig.LogLocations.consoleAndFile,
-        "Service Started for searching active queque");
+        "Service Started for searching active queue");
       await mongoose.connect(globalConfig.mongo_url).then(async(result) => {
         logger.Log(
           globalConfig.LogTypes.info,
@@ -27,23 +27,23 @@ const runScript = async () => {
       const currentHour = currentDate.getHours();
       const currentMinute = currentDate.getMinutes();
 
-      const quequeList = await quequeModel.find({
+      const queueList = await queueModel.find({
         startDate: {
           $gte: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), currentHour, currentMinute),
           $lt: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), currentHour, currentMinute + 1)
         },
         status: QUEUE_STATUS.PENDING
       });
-      if (quequeList.length > 0) {
-        for (let queque of quequeList) {
-          //adding workers for each queque inside of the queque list
-          queque.status = QUEUE_STATUS.IN_PROGRESS;
-          const updatedQueue = await quequeModel.updateOne(
-            {_id: queque._id.toString()},
-              {$set:queque}
+      if (queueList.length > 0) {
+        for (let queue of queueList) {
+          //adding workers for each queue inside of the queue list
+          queue.status = QUEUE_STATUS.IN_PROGRESS;
+          const updatedQueue = await queueModel.updateOne(
+            {_id: queue._id.toString()},
+              {$set:queue}
           );
-          const worker = new Worker("./quequeManagement/quequeController.js", {
-            workerData: { queque: JSON.stringify(queque) },
+          const worker = new Worker("./queueManagement/queueController.js", {
+            workerData: { queue: JSON.stringify(queue) },
           });
           worker.postMessage('start');
           console.log(`THREAD ID: ${worker.threadId}`);
@@ -52,7 +52,7 @@ const runScript = async () => {
         logger.Log(
           globalConfig.LogTypes.info,
           globalConfig.LogLocations.consoleAndFile,
-          `There is no queque for this Date => [${currentDate}]`
+          `There is no queue for this Date => [${currentDate}]`
         );
       }
     }

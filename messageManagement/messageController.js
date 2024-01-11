@@ -26,14 +26,14 @@ const {
   seperateDataFromUpsert, 
   mergeUpsertUpdateData 
 } = require("../modules/handleUpdateEventObject");
-const { quequeModel, QUEUE_STATUS } = require("../model/queque.types");
+const { queueModel, QUEUE_STATUS } = require("../model/queue.types");
 const events = require("worker/build/main/browser/events");
 const { globalConfig } = require("../Utils/config");
 const wpClient = require("./wpController");
 const { logger } = require("../Utils/logger");
 const { customerModel } = require("../model/customers.types");
 const {parentPort} = require('worker_threads');
-const { quequeItemModel } = require("../model/quequeItem.types");
+const { queueItemModel } = require("../model/queueItem.types");
 const { creditTransactionModel } = require("../model/creditTransaction.types");
 const { userModel } = require("../model/user.types");
 const { creditsModel } = require("../model/credits.types");
@@ -54,7 +54,7 @@ class MessageController {
     this.isConnected = false;
     this.otomationUpdates = []
     this.otomationUpserts = []
-    this.strategy = defineStrategy(this.queue.quequeMessage, this.files)
+    this.strategy = defineStrategy(this.queue.queueMessage, this.files)
 
     this.controller = new wpClient.WpController(
       this.userProps.session
@@ -142,7 +142,7 @@ class MessageController {
     for (const item of this.queueItems) {
       if (this.counter % this.checkStatusPerItem === 0)
       {
-        const currentState = await quequeModel.findById(this.queue._id.toString());
+        const currentState = await queueModel.findById(this.queue._id.toString());
         if (currentState.status === QUEUE_STATUS.PAUSED)
         {
           closeSocket(socket, parentPort);
@@ -172,7 +172,7 @@ class MessageController {
       }
     }
     this.queue.status = QUEUE_STATUS.COMPLETED;
-    await quequeModel.updateOne(
+    await queueModel.updateOne(
       {_id: this.queue._id.toString()},
         {$set:this.queue}
     );
@@ -190,7 +190,7 @@ class MessageController {
     {
       case MESSAGE_STRATEGY.JUST_TEXT: //OK 1 credit
       {
-        await sendMessage(this.socket, currentReceiver, this.queue.quequeMessage)
+        await sendMessage(this.socket, currentReceiver, this.queue.queueMessage)
         break;
       }
       case MESSAGE_STRATEGY.JUST_FILE: // OK 1 credit
@@ -223,7 +223,7 @@ class MessageController {
       }
       case MESSAGE_STRATEGY.MULTIPLE_FILE_MESSAGE:
       {
-        await sendMessage(this.socket, currentReceiver, this.queue.quequeMessage)
+        await sendMessage(this.socket, currentReceiver, this.queue.queueMessage)
         this.files.map(async(file) => {
           const extension = getFileType(file)
           const file_type = isMedia(extension)
@@ -246,12 +246,12 @@ class MessageController {
         }${this.queue._id.toString()}/${this.files[0]}`;
         if(file_type === FILE_TYPE.FILE)
         {
-          await sendMessage(this.socket, currentReceiver, this.queue.quequeMessage)
+          await sendMessage(this.socket, currentReceiver, this.queue.queueMessage)
           await sendFile(this.socket, currentReceiver, fullFilePath, extension)
         }
         else
         {
-          await sendMediaAndContentMessage(this.socket, currentReceiver, fullFilePath, extension, this.queue.quequeMessage)
+          await sendMediaAndContentMessage(this.socket, currentReceiver, fullFilePath, extension, this.queue.queueMessage)
         }
         break;
       }
@@ -309,7 +309,7 @@ class MessageController {
     );
     queueItem.spendCredit = spendCount;
     queueItem.message_status = JSON.stringify(extendedMessagesForCustomers, undefined, 2)
-    await quequeItemModel.updateOne({_id: queueItem._id}, queueItem)
+    await queueItemModel.updateOne({_id: queueItem._id}, queueItem)
     this.userProps.credit.totalAmount -= spendCount
     await creditsModel.updateOne({_id: this.userProps.credit._id}, this.userProps.credit)
     if(spendCount > 0)

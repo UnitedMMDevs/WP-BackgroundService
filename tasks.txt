@@ -1,20 +1,30 @@
 	
 YAPILACAKLAR
-	-> GÖNDERİLEN MESAJLARIN KAYITLARI YAPILACAK.
-	-> MESAJ GÖNDERİM ESNASINDA GÖNDERİLEN MESAJLARIN ULAŞTIRILIP ULAŞTIRILMADIĞINI GÖSTERİYOR OLACAK
-	-> HER BİR MESAJ GÖNDERİLDİKTEN SONRA QUEUE ITEMLER İÇİN SPENDCREDIT ÖZELLİĞİ TRUE YAPILACAK VE AYNI ZAMANDA CREDIT TRANSACTION VE USER'IN CREDIT SAYISI DÜŞÜRELECEK.
-	
-		
+	-> GÖNDERİLEN MESAJLARIN KAYITLARI YAPILACAK. = OK
+	-> MESAJ GÖNDERİM ESNASINDA GÖNDERİLEN MESAJLARIN ULAŞTIRILIP ULAŞTIRILMADIĞINI GÖSTERİYOR OLACAK = OK
+	-> HER BİR MESAJ GÖNDERİLDİKTEN SONRA QUEUE ITEMLER İÇİN SPENDCREDIT ÖZELLİĞİ TRUE YAPILACAK VE AYNI ZAMANDA CREDIT TRANSACTION VE USER'IN CREDIT SAYISI DÜŞÜRELECEK. = OK
+- sistem mesaj atarken tek resim ve yazi ise once resmi ekleyecek resmin altına mesaj atacak (orda karakter sınırı var onu kontrol edelim) bu islemi yaparsa 1 kontör düşsün. OK
+- resim 2 adet yada daha fazla ise once resimleri eklesin en son yazıyı ekleyerek gondersin OK 
+- gönderilecek dosyalar. resim dosyası. jpg. png . ses dosyası whatsapp ses dosyasi pdf ve video dosyalarını atabilsinler OK
+- mesaj kuyruğa eklerken gonderim saati sorsun o saatde yada o tarih ve saatde başlasın OK 
+- kuyruk da olan mesaji revize edebilsin görselide degistire bilsinler (PENDING ANINDA) OK
 
+
+
+queue olusturma sirasinda kredinin yeterli olup olmadigina bakacagim OK
+queue musteri ekleme kisminda kredi yeterliligine bakicam OK
+butun update islemlerindeki kredi yeterlilik hesaplamasina bakacagim OK
+butun queque yanlis adlandirmalarinin hepsi duzeltilecek
+
+queue pending aninda yeni dosya ekleme ozelligi ekleyecegim yine kredi yeterliligine bakacagim
 credit transaction dataları çekilecek (currentCredit | total spend | average monthly)
 
 
-- sistem mesaj atarken tek resim ve yazi ise once resmi ekleyecek resmin altına mesaj atacak (orda karakter sınırı var onu kontrol edelim) bu islemi yaparsa 1 kontör düşsün.
-- resim 2 adet yada daha fazla ise once resimleri eklesin en son yazıyı ekleyerek gondersin
-- gönderilecek dosyalar. resim dosyası. jpg. png . ses dosyası whatsapp ses dosyasi pdf ve video dosyalarını atabilsinler
-- mesaj kuyruğa eklerken gonderim saati sorsun o saatde yada o tarih ve saatde başlasın
-- kuyruk da olan mesaji revize edebilsin görselide degistire bilsinler (PENDING ANINDA)
+
+
+- serviste credit transaction islemi kuyruk butun kullanicilara mesaj gonderme islemini bitirdikten sonra eklenecek
 - genel mesaj gonderin saati diye birsey vereceğiz sabah 9:00 aksam 22:00 gibi
+- serviste belirtilen saatler arasinda islemi bitiremez ise pending e cekecek ve tekrar mesaj gonderim islemi yapmaya calisacak (message_status === "" && spentCredit === 0) olanlara 
 - kuyruklar bu sürelerde calisacak bu sürenin dışında kalirsa kendi durduracak
 
 
@@ -24,130 +34,4 @@ front-end
 graylist blacklist kullanıcıları eklenecek.
 rest api mail htmlleri düzenlenecek.
 
-// okunmamis
-update [
-  {
-    "key": {
-      "remoteJid": "905511197123@s.whatsapp.net",
-      "id": "BAE5222D7A32D903",
-      "fromMe": true
-    },
-    "update": {
-      "status": 3
-    }
-  }
-]
-// okunmus
-update [
-  {
-    "key": {
-      "remoteJid": "905511197123@s.whatsapp.net",
-      "id": "BAE5222D7A32D903",
-      "fromMe": true
-    },
-    "update": {
-      "status": 4
-    }
-  }
-]
-/////////
-upsert {
-  "messages": [
-    {
-      "key": {
-        "remoteJid": "905511197123@s.whatsapp.net",
-        "fromMe": true,
-        "id": "BAE5942081687696"
-      },
-      "message": {
-        "extendedTextMessage": {
-          "text": "test"
-        }
-      },
-      "messageTimestamp": "1704796146",
-      "status": "PENDING"
-    }
-  ],
-  "type": "append"
-}
-
-async ExecuteProcess() {
-    const { state, saveCreds } = await checkAuthentication(logger, this.controller, this.dependencies.userProps.session);
-    if (!state) return;
-    const socketOptions = {
-      printQRInTerminal: false,
-      auth: state,
-      receivedPendingNotifications: true,
-      defaultQueryTimeoutMs: undefined,
-      markOnlineOnConnect: true,
-      shouldIgnoreJid: jid => isJidBroadcast(jid),
-      syncFullHistory: false
-    };
-    const socket = makeWASocket(socketOptions);
-    socket.ev.on('messages.update', (update) => {
-      console.log("here", update);
-    })
-    socket.ev.on('connection.update', async({ connection, lastDisconnect }) => {
-      const status = lastDisconnect?.error?.output?.statusCode
-      if (connection === 'close'){
-          const reason = Object.entries(DisconnectReason).find(i => i[1] === status)?.[0] || 'unknown'  
-          if (status !== 403 && status === 401 && !status){
-            this.ExecuteProcess()
-          }
-      }
-      else if (connection === 'open'){
-        await saveCreds();
-          const settings = this.dependencies.userProps.settings;
-          for (const item of this.dependencies.queueItems) {
-              if (this.counter % this.checkStatusPerItem === 0)
-              {
-                const currentState = await quequeModel.findById(this.dependencies.queue._id.toString());
-                if (currentState.status === QUEUE_STATUS.PAUSED)
-                {
-                  closeSocket(socket, parentPort);
-                  break;
-                }
-              }
-              const customer = await customerModel.findById(item.customerId);
-              const delaySeconds = getRandomDelay(
-                settings.min_message_delay,
-                settings.max_message_delay
-              );
-              if (customer) {
-              
-                await this.HandleSendMessageState(socket, customer, delaySeconds)
-                this.counter++;
-              }
-            
-            }
-            this.dependencies.queue.status = QUEUE_STATUS.COMPLETED;
-            await quequeModel.updateOne(
-              {_id: this.dependencies.queue._id.toString()},
-                {$set:this.dependencies.queue}
-            );
-          
-          //closeSocket(socket, parentPort)    
-      }
-    })
-    
-  }
-  
-  async HandleSendingMessages(socket, customer, delaySeconds) {
-    const settings = this.dependencies.userProps.settings;
-    const wpId = `${customer.phone}${this.baseIdName}`;
-    if (this.isFile && this.isMessage) {
-      sendFileAndMessage(socket, wpId, this.dependencies.files, this.dependencies.queue);
-    } else if (this.isFile && !this.isMessage) {
-      await sendFile(socket, wpId, this.dependencies.files, this.dependencies.queue);
-    } else if (!this.isFile && this.isMessage) {
-      await sendMessage(socket, wpId, this.dependencies.queue);
-    }
-    logger.Log(
-      globalConfig.LogTypes.info,
-      globalConfig.LogLocations.all,
-      `Message sent to [${customer._id.toString()}] by [${settings.userId}]`
-    );
-    await delay(delaySeconds * 1000);
-  }
-    
   

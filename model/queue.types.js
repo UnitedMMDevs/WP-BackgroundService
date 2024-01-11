@@ -7,7 +7,7 @@ const QUEUE_STATUS = {
     PAUSED: 'PAUSED',
 }
   
-const quequeSchema = new mongoose.Schema({
+const queueSchema = new mongoose.Schema({
     userId: {
         type: String,
         required: true,
@@ -16,11 +16,11 @@ const quequeSchema = new mongoose.Schema({
         type:String,
         required: true,
     },
-    quequeTitle: {
+    queueTitle: {
         type: String,
         required: true,
     },
-    quequeMessage: {
+    queueMessage: {
         type: String,
         required: true
     },
@@ -44,5 +44,5 @@ const quequeSchema = new mongoose.Schema({
     }
 
 });
-const quequeModel = mongoose.model('queques', quequeSchema);
-module.exports = {quequeModel, QUEUE_STATUS}
+const queueModel = mongoose.model('queue', queueSchema);
+module.exports = {queueModel, QUEUE_STATUS}

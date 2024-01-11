@@ -1,5 +1,5 @@
 const { workerData, parentPort, threadId } = require("worker_threads");
-const { quequeItemModel } = require("../model/quequeItem.types");
+const { queueItemModel } = require("../model/queueItem.types");
 const { userModel } = require("../model/user.types");
 const { creditsModel } = require("../model/credits.types");
 const { globalConfig } = require("../Utils/config");
@@ -12,14 +12,14 @@ const { default: mongoose } = require("mongoose");
 const fs = require("fs");
 const { logger } = require('../Utils/logger');
 const { MessageController } = require("../messageManagement/messageController");
-const { QUEUE_STATUS, quequeModel } = require("../model/queque.types");
+const { QUEUE_STATUS, queueModel } = require("../model/queue.types");
 
 
 
 class QueueController {
 
-  constructor(queque) {
-    this.queue = JSON.parse(queque);
+  constructor(queue) {
+    this.queue = JSON.parse(queue);
     this.currentUser = null;
     this.userDependencies = null;
     this.files = null;
@@ -30,22 +30,22 @@ class QueueController {
     await mongoose.connect(globalConfig.mongo_url);
     logger.Log(globalConfig.LogTypes.info,
       globalConfig.LogLocations.consoleAndFile,
-      `The Queque process executing for ${this.queue._id.toString()}]`)
+      `The Queue process executing for ${this.queue._id.toString()}]`)
     const dependencies = await this.InitializeDependencies();
     if (dependencies) {
       this.queue.status = QUEUE_STATUS.IN_PROGRESS;
-      await quequeModel.updateOne({_id: this.queue._id}, this.queue);
+      await queueModel.updateOne({_id: this.queue._id}, this.queue);
       let messageController = new MessageController(dependencies)
       await messageController.InitializeSocket();
     }
   }
   async InitializeDependencies() {
     // this code block
-    // collecting all the dependencies for sending message operation to queque
+    // collecting all the dependencies for sending message operation to queue
     try {
       logger.Log(globalConfig.LogTypes.info,
         globalConfig.LogLocations.consoleAndFile,
-        `Service collection dependencies for this queque [${this.queue._id.toString()}]`
+        `Service collection dependencies for this queue [${this.queue._id.toString()}]`
       )
       this.currentUser = await userModel.findById(this.queue.userId);
       if (!this.currentUser) {
@@ -68,7 +68,7 @@ class QueueController {
       logger.Log(
         globalConfig.LogTypes.error,
         globalConfig.LogLocations.all,
-        `System Fail message: ${err.message.toString()} for this queque: [${this.queue._id.toString()}]`
+        `System Fail message: ${err.message.toString()} for this queue: [${this.queue._id.toString()}]`
       )
       return null;
     }
@@ -97,16 +97,16 @@ class QueueController {
   }
 
   async getQueueItems(queueId) {
-    // getting all the customers added for this queque
-    const quequeItems = await quequeItemModel.find({
-      quequeId: queueId,
+    // getting all the customers added for this queue
+    const queueItems = await queueItemModel.find({
+      queueId: queueId,
       spendCredit: 0
     })
-    return quequeItems;
+    return queueItems;
   }
 
   async getFiles(queuePath) {
-    // checking files for queque
+    // checking files for queue
     const filePath = `${globalConfig.baseRootPath}${queuePath}`;
     try {
       const files = await fs.promises.readdir(filePath);
@@ -127,9 +127,9 @@ parentPort.on("message", async (message) => {
     logger.Log(globalConfig.LogTypes.info,
       globalConfig.LogLocations.console,
       `|||||||||||||| WORKER HAS BEEN START ${threadId} |||||||||||`)
-    const { queque } = workerData;
-    if (queque) {
-      const controller = new QueueController(queque);
+    const { queue } = workerData;
+    if (queue) {
+      const controller = new QueueController(queue);
       await controller.ExecuteProcess();
     }
   }

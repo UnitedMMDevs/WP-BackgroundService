@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const quequeItemSchema = new mongoose.Schema({
-    quequeId: {
+const queueItemSchema = new mongoose.Schema({
+    queueId: {
         type: String,
         required: true,
     },
@@ -29,5 +29,5 @@ const quequeItemSchema = new mongoose.Schema({
         default: new Date() 
     }
 });
-const quequeItemModel = mongoose.model('quequeitems', quequeItemSchema);
-module.exports = {quequeItemModel};
+const queueItemModel = mongoose.model('queueitems', queueItemSchema);
+module.exports = {queueItemModel};

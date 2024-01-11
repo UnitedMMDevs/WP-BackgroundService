@@ -62,19 +62,18 @@ class FileLogger {
     }
 }
 class DbLogger {
-    
     constructor() {
         this.logger = winston.createLogger(
             {
                 transports: [new winston.transports.MongoDB({
                     db: globalConfig.mongo_url,
                     options: { useUnifiedTopology: true },
-                    collection: 'Logs',
+                    collection: 'service-logs',
                 })],
                 format: winston.format.json(),
                 defaultMeta: {
                     service: "Pro-WhatsApp-Queue-Service"
-                }
+                },
             }
         )
     }
