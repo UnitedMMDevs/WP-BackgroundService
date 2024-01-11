@@ -15,13 +15,27 @@ butun queque yanlis adlandirmalarinin hepsi duzeltilecek OK
 queue pending aninda yeni dosya ekleme ozelligi ekleyecegim yine kredi yeterliligine bakacagim OK
 credit transaction dataları çekilecek (currentCredit | total spend | average monthly) OK
 -serviste credit transaction islemi kuyruk butun kullanicilara mesaj gonderme islemini bitirdikten sonra eklenecek OK 
+-serviste kuyruk itemleri islemi yapmaya calisacak (message_status === "" && spentCredit === 0) olanlara  OK
+-group kismi duzenlenecek OK
+-genel mesaj gonderin saati diye birsey vereceğiz sabah 9:00 aksam 22:00 gibi OK
+
 
 - admin endpoints
--group kismi duzenlenecek
+	=> user details
+	=> ban user
+	=> upload credit to user
+	=> see logs
+	=> database import export
+	=> online users
+	=> credit Chart
+	=> user sessions
+	=> queue list
+	=> activities
+	
+
 - activities entegre edilecek
 
-- genel mesaj gonderin saati diye birsey vereceğiz sabah 9:00 aksam 22:00 gibi
-- serviste belirtilen saatler arasinda islemi bitiremez ise pending e cekecek ve tekrar mesaj gonderim islemi yapmaya calisacak (message_status === "" && spentCredit === 0) olanlara 
+- serviste belirtilen saatler arasinda islemi bitiremez ise pending e cekecek ve tekrar mesaj gonderim zamanini da bir sonraki gunun baslangic saati olarak ayarlayacak 
 - kuyruklar bu sürelerde calisacak bu sürenin dışında kalirsa kendi durduracak
 
 

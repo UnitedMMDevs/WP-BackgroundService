@@ -133,6 +133,7 @@ class MessageController {
   }
   
   async ExecuteOtomation(){
+    
     const settings = this.userProps.settings;
     let totalSpend_count = 0;
     const delaySeconds = getRandomDelay(
@@ -141,6 +142,35 @@ class MessageController {
     );
     await delay(delaySeconds * 1000);
     for (const item of this.queueItems) {
+      const currentDate = new Date()
+      let currentHour = currentDate.getHours()
+      let currentMinute = currentDate.getMinutes()
+      if (!(currentHour <= settings.end_Hour && currentHour >= settings.start_Hour) && (currentMinute >= settings.start_Minute && currentMinute < settings.end_Minute))
+      {
+        logger.Log(
+          globalConfig.LogTypes.info,
+          globalConfig.LogLocations.all,
+          `The queue [${this.queue._id.toString()}] exceeded the daily sending hour range, therefore it was stopped by the service.`
+        );
+        this.queue.status === QUEUE_STATUS.PAUSED
+        await queueModel.updateOne(
+          {_id: this.queue._id.toString()},
+            {$set:this.queue}
+        );
+        closeSocket(socket, parentPort);
+        break;
+      }
+      const currentState = await queueModel.findById(this.queue._id.toString());
+      if (currentState.status === QUEUE_STATUS.PAUSED)
+      {
+        logger.Log(
+          globalConfig.LogTypes.info,
+          globalConfig.LogLocations.all,
+          `The Queue [${this.queue._id.toString()}] stopped by user [${this.userProps.credit.userId}]`
+        );
+        closeSocket(socket, parentPort);
+        break;
+      }
       if (this.counter % this.checkStatusPerItem === 0)
       {
         const currentState = await queueModel.findById(this.queue._id.toString());
