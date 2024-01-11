@@ -134,6 +134,7 @@ class MessageController {
   
   async ExecuteOtomation(){
     const settings = this.userProps.settings;
+    let totalSpend_count = 0;
     const delaySeconds = getRandomDelay(
       settings.min_message_delay,
       settings.max_message_delay
@@ -166,10 +167,24 @@ class MessageController {
         );
         await delay(delaySeconds * 1000);
         const mergedData = mergeUpsertUpdateData(this.otomationUpserts, this.otomationUpdates)
-        await this.AnalysisReceiverDataAndSave(mergedData, customer, item)
+        totalSpend_count += await this.AnalysisReceiverDataAndSave(mergedData, customer, item)
         this.otomationUpdates = []
         this.otomationUpserts = []
       }
+    }
+    if(totalSpend_count > 0)
+    {
+      await creditTransactionModel.create({
+        user_id: this.userProps.credit.userId.toString(),
+        amount: totalSpend_count,
+        transaction_date: new Date(Date.now()),
+        transaction_type: "spent"
+      })
+      logger.Log(
+        globalConfig.LogTypes.info,
+        globalConfig.LogLocations.all,
+        `Credit Transaction created. | SPENT | ${this.queue.userId}`
+      );
     }
     this.queue.status = QUEUE_STATUS.COMPLETED;
     await queueModel.updateOne(
@@ -312,18 +327,7 @@ class MessageController {
     await queueItemModel.updateOne({_id: queueItem._id}, queueItem)
     this.userProps.credit.totalAmount -= spendCount
     await creditsModel.updateOne({_id: this.userProps.credit._id}, this.userProps.credit)
-    if(spendCount > 0)
-      await creditTransactionModel.create({
-        user_id: this.userProps.credit.userId.toString(),
-        amount: spendCount,
-        transaction_date: new Date(Date.now()),
-        transaction_type: "spent"
-      })
-    logger.Log(
-      globalConfig.LogTypes.info,
-      globalConfig.LogLocations.all,
-      `Credit Transaction created. | SPENT | ${this.queue.userId}`
-    );
+    return spendCount
   }
 }
 module.exports = { MessageController };

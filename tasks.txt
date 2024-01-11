@@ -14,15 +14,18 @@ YAPILACAKLAR
 queue olusturma sirasinda kredinin yeterli olup olmadigina bakacagim OK
 queue musteri ekleme kisminda kredi yeterliligine bakicam OK
 butun update islemlerindeki kredi yeterlilik hesaplamasina bakacagim OK
-butun queque yanlis adlandirmalarinin hepsi duzeltilecek
-
-queue pending aninda yeni dosya ekleme ozelligi ekleyecegim yine kredi yeterliligine bakacagim
-credit transaction dataları çekilecek (currentCredit | total spend | average monthly)
+butun queque yanlis adlandirmalarinin hepsi duzeltilecek OK
+queue pending aninda yeni dosya ekleme ozelligi ekleyecegim yine kredi yeterliligine bakacagim OK
 
 
 
+credit transaction dataları çekilecek (currentCredit | total spend | average monthly) OK
+-serviste credit transaction islemi kuyruk butun kullanicilara mesaj gonderme islemini bitirdikten sonra eklenecek
 
-- serviste credit transaction islemi kuyruk butun kullanicilara mesaj gonderme islemini bitirdikten sonra eklenecek
+
+-group kismi duzenlenecek
+- activities entegre edilecek
+
 - genel mesaj gonderin saati diye birsey vereceğiz sabah 9:00 aksam 22:00 gibi
 - serviste belirtilen saatler arasinda islemi bitiremez ise pending e cekecek ve tekrar mesaj gonderim islemi yapmaya calisacak (message_status === "" && spentCredit === 0) olanlara 
 - kuyruklar bu sürelerde calisacak bu sürenin dışında kalirsa kendi durduracak
