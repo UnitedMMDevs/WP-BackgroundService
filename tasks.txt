@@ -19,7 +19,12 @@ credit transaction dataları çekilecek (currentCredit | total spend | average m
 -group kismi duzenlenecek OK
 -genel mesaj gonderin saati diye birsey vereceğiz sabah 9:00 aksam 22:00 gibi OK
 
+- serviste belirtilen saatler arasinda islemi bitiremez ise pending e cekecek ve tekrar mesaj gonderim zamanini da bir sonraki gunun baslangic saati olarak ayarlayacak OK
+- kuyruklar bu sürelerde calisacak bu sürenin dışında kalirsa kendi durduracak OK
 
+
+- backend admin hesabi olusturulacak
+- router admin problemi cozulecek
 - admin endpoints
 	=> user details
 	=> ban user
@@ -31,15 +36,8 @@ credit transaction dataları çekilecek (currentCredit | total spend | average m
 	=> user sessions
 	=> queue list
 	=> activities
-	
 
 - activities entegre edilecek
-
-- serviste belirtilen saatler arasinda islemi bitiremez ise pending e cekecek ve tekrar mesaj gonderim zamanini da bir sonraki gunun baslangic saati olarak ayarlayacak 
-- kuyruklar bu sürelerde calisacak bu sürenin dışında kalirsa kendi durduracak
-
-
-
 
 front-end
 graylist blacklist kullanıcıları eklenecek.

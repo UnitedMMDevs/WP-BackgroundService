@@ -52,8 +52,8 @@ class MessageController {
     this.checkStatusPerItem = defineStatusCheckDelay(this.queueItems.length);
     this.baseIdName = "@s.whatsapp.net";
     this.isConnected = false;
-    this.otomationUpdates = []
-    this.otomationUpserts = []
+    this.automationUpdates = []
+    this.automationUpserts = []
     this.strategy = defineStrategy(this.queue.queueMessage, this.files)
 
     this.controller = new wpClient.WpController(
@@ -104,9 +104,9 @@ class MessageController {
       const seperatedData = seperateDataFromUpdate(update)
       const uniqueSeperatedData = seperatedData.filter((item) => 
       {
-        return !this.otomationUpdates.some((targetItem) => ((targetItem.remoteJid === item.remoteJid) && (targetItem.id === item.id)))
+        return !this.automationUpdates.some((targetItem) => ((targetItem.remoteJid === item.remoteJid) && (targetItem.id === item.id)))
       })
-      this.otomationUpdates.push(...uniqueSeperatedData);
+      this.automationUpdates.push(...uniqueSeperatedData);
     })
     this.socket.ev.on('messages.upsert', async (update) => {
       logger.Log(globalConfig.LogTypes.info,
@@ -116,15 +116,15 @@ class MessageController {
       const seperatedData = seperateDataFromUpsert(update);
       const uniqueSeperatedData = seperatedData.filter((item) => 
       {
-        return !this.otomationUpdates.some((targetItem) => ((targetItem.remoteJid === item.remoteJid) && (targetItem.id === item.id)))
+        return !this.automationUpdates.some((targetItem) => ((targetItem.remoteJid === item.remoteJid) && (targetItem.id === item.id)))
       })
-      this.otomationUpserts.push(...uniqueSeperatedData);     
+      this.automationUpserts.push(...uniqueSeperatedData);     
     })
     setTimeout(async() => {
 
     }, 5000);
     if(this.CheckConnectionSuccess())
-      await this.ExecuteOtomation()
+      await this.ExecuteAutomation()
     else
       logger.Log(globalConfig.LogTypes.warn,
         globalConfig.LogLocations.all,
@@ -132,8 +132,7 @@ class MessageController {
       )
   }
   
-  async ExecuteOtomation(){
-    
+  async ExecuteAutomation(){
     const settings = this.userProps.settings;
     let totalSpend_count = 0;
     const delaySeconds = getRandomDelay(
@@ -160,24 +159,37 @@ class MessageController {
         closeSocket(socket, parentPort);
         break;
       }
-      const currentState = await queueModel.findById(this.queue._id.toString());
-      if (currentState.status === QUEUE_STATUS.PAUSED)
-      {
-        logger.Log(
-          globalConfig.LogTypes.info,
-          globalConfig.LogLocations.all,
-          `The Queue [${this.queue._id.toString()}] stopped by user [${this.userProps.credit.userId}]`
-        );
-        closeSocket(socket, parentPort);
-        break;
-      }
+      
       if (this.counter % this.checkStatusPerItem === 0)
       {
         const currentState = await queueModel.findById(this.queue._id.toString());
         if (currentState.status === QUEUE_STATUS.PAUSED)
         {
+          logger.Log(
+            globalConfig.LogTypes.info,
+            globalConfig.LogLocations.all,
+            `The Queue [${this.queue._id.toString()}] stopped by user [${this.userProps.credit.userId}]`
+          );
           closeSocket(socket, parentPort);
           break;
+        }
+        else
+        {
+          if(totalSpend_count > 0)
+          {
+            await creditTransactionModel.create({
+              user_id: this.userProps.credit.userId.toString(),
+              amount: totalSpend_count,
+              transaction_date: new Date(Date.now()),
+              transaction_type: "spent"
+            })
+            logger.Log(
+              globalConfig.LogTypes.info,
+              globalConfig.LogLocations.all,
+              `Credit Transaction created. | SPENT | ${this.queue.userId}`
+            );
+            totalSpend_count = 0
+          }
         }
       }
       const customer = await customerModel.findById(item.customerId);
@@ -196,26 +208,13 @@ class MessageController {
           settings.max_message_delay
         );
         await delay(delaySeconds * 1000);
-        const mergedData = mergeUpsertUpdateData(this.otomationUpserts, this.otomationUpdates)
+        const mergedData = mergeUpsertUpdateData(this.automationUpserts, this.automationUpdates)
         totalSpend_count += await this.AnalysisReceiverDataAndSave(mergedData, customer, item)
-        this.otomationUpdates = []
-        this.otomationUpserts = []
+        this.automationUpdates = []
+        this.automationUpserts = []
       }
     }
-    if(totalSpend_count > 0)
-    {
-      await creditTransactionModel.create({
-        user_id: this.userProps.credit.userId.toString(),
-        amount: totalSpend_count,
-        transaction_date: new Date(Date.now()),
-        transaction_type: "spent"
-      })
-      logger.Log(
-        globalConfig.LogTypes.info,
-        globalConfig.LogLocations.all,
-        `Credit Transaction created. | SPENT | ${this.queue.userId}`
-      );
-    }
+
     this.queue.status = QUEUE_STATUS.COMPLETED;
     await queueModel.updateOne(
       {_id: this.queue._id.toString()},
