@@ -12,14 +12,14 @@ const {
   MESSAGE_STRATEGY, 
   FILE_TYPE, 
   sendMediaAndContentMessage, 
-  sendFile
+  sendFile,
+  defineStrategy,
+  isMedia,
 } = require('../Utils/wp-utilities');
 const { 
   getRandomDelay, 
   defineStatusCheckDelay, 
-  defineStrategy, 
   getFileType, 
-  isMedia
 } = require("../Utils/utilties");
 const { 
   seperateDataFromUpdate, 
@@ -37,6 +37,7 @@ const { queueItemModel } = require("../model/queueItem.types");
 const { creditTransactionModel } = require("../model/creditTransaction.types");
 const { userModel } = require("../model/user.types");
 const { creditsModel } = require("../model/credits.types");
+const { default: mongoose } = require("mongoose");
 class MessageController {
   constructor({
     queue,
@@ -55,7 +56,7 @@ class MessageController {
     this.automationUpdates = []
     this.automationUpserts = []
     this.strategy = defineStrategy(this.queue.queueMessage, this.files)
-
+    this.credsUpdated = false
     this.controller = new wpClient.WpController(
       this.userProps.session
     ); 
@@ -71,55 +72,73 @@ class MessageController {
     this.authConfig = await checkAuthentication(logger, this.controller, this.userProps.session);
     if (!this.authConfig.state && !this.authConfig.saveCreds) return;
     const socketOptions = generateSocketOptions(this.authConfig.state)
-    this.socket = makeWASocket(socketOptions);
-    this.socket.ev.on('connection.update',  async ({ connection, lastDisconnect }) =>{
-      const status = lastDisconnect?.error?.output?.statusCode
-      if (connection === 'close'){
-          if (status !== 403 && status === 401 && !status){
-            this.InitializeSocket()
-            logger.Log(globalConfig.LogTypes.info,
-              globalConfig.LogLocations.consoleAndFile,
-              `Service retry connect to [${this.userProps.credit.userId.toString()}]'s Whatsapp account successfully`
-            )
+    this.socket = makeWASocket(socketOptions)
+    this.socket.ev.process(async(events) => {
+      if (events["connection.update"])
+      {
+        const {connection, lastDisconnect} = events["connection.update"]
+        const status = lastDisconnect?.error?.output?.statusCode
+        if (connection === 'close'){
+            if (status !== 403 && status === 401 && !status){
+              this.InitializeSocket()
+              logger.Log(globalConfig.LogTypes.info,
+                globalConfig.LogLocations.consoleAndFile,
+                `Service retry connect to [${this.userProps.credit.userId.toString()}]'s Whatsapp account successfully`
+              )
+            }
+        }
+        else if (connection === 'open'){
+          logger.Log(globalConfig.LogTypes.info,
+            globalConfig.LogLocations.consoleAndFile,
+            `Service Connected to [${this.userProps.credit.userId.toString()}]'s Whatsapp account successfully`
+          )
+          this.isConnected = true;
+          await this.authConfig.saveCreds()
+        }
+      }
+
+      if(events['creds.update'])
+      {
+        this.authConfig.saveCreds
+      }
+      if (events['messages.update'])
+      {
+        const data = events['messages.update']
+        logger.Log(globalConfig.LogTypes.info,
+          globalConfig.LogLocations.console,
+          `Service proccessing update data for messages... | queue => [${this.queue._id.toString()}]`
+          )
+          if (data)
+          {
+            console.log(JSON.stringify(data))
+            const seperatedData = seperateDataFromUpdate(data)
+            const uniqueSeperatedData = seperatedData.filter((item) => 
+            {
+              return !this.automationUpdates.some((targetItem) => ((targetItem.remoteJid === item.remoteJid) && (targetItem.id === item.id)))
+            })
+            this.automationUpdates.push(...uniqueSeperatedData);
           }
       }
-      else if (connection === 'open'){
-        await this.authConfig.saveCreds()
+      if (events['messages.upsert'])
+      {
         logger.Log(globalConfig.LogTypes.info,
-          globalConfig.LogLocations.consoleAndFile,
-          `Service Connected to [${this.userProps.credit.userId.toString()}]'s Whatsapp account successfully`
+          globalConfig.LogLocations.console,
+          `Service proccessing upsert data for messages... | queue => [${this.queue._id.toString()}]`
         )
-        this.isConnected = true;
+        const data = events['messages.upsert']
+        if (data)
+        {
+          console.log(JSON.stringify(data))
+          const seperatedData = seperateDataFromUpsert(data)
+          const uniqueSeperatedData = seperatedData.filter((item) => 
+          {
+            return !this.automationUpserts.some((targetItem) => ((targetItem.remoteJid === item.remoteJid) && (targetItem.id === item.id)))
+          })
+          this.automationUpserts.push(...uniqueSeperatedData);
+        } 
       }
     })
-    this.socket.ev.on('creds.update', this.authConfig.saveCreds)
-    this.socket.ev.on('messages.update', async (update) => {
-      logger.Log(globalConfig.LogTypes.info,
-        globalConfig.LogLocations.console,
-        `Service proccessing update data for messages... | queue => [${this.queue._id.toString()}]`
-      )
-      const seperatedData = seperateDataFromUpdate(update)
-      const uniqueSeperatedData = seperatedData.filter((item) => 
-      {
-        return !this.automationUpdates.some((targetItem) => ((targetItem.remoteJid === item.remoteJid) && (targetItem.id === item.id)))
-      })
-      this.automationUpdates.push(...uniqueSeperatedData);
-    })
-    this.socket.ev.on('messages.upsert', async (update) => {
-      logger.Log(globalConfig.LogTypes.info,
-        globalConfig.LogLocations.console,
-        `Service proccessing upsert data for messages... | queue => [${this.queue._id.toString()}]`
-      )
-      const seperatedData = seperateDataFromUpsert(update);
-      const uniqueSeperatedData = seperatedData.filter((item) => 
-      {
-        return !this.automationUpdates.some((targetItem) => ((targetItem.remoteJid === item.remoteJid) && (targetItem.id === item.id)))
-      })
-      this.automationUpserts.push(...uniqueSeperatedData);     
-    })
-    setTimeout(async() => {
-
-    }, 5000);
+    await delay(1 * 1000)
     if(this.CheckConnectionSuccess())
       await this.ExecuteAutomation()
     else
@@ -131,30 +150,26 @@ class MessageController {
   
   async ExecuteAutomation(){
     const settings = this.userProps.settings;
-    const delaySeconds = getRandomDelay(
-      settings.min_message_delay,
-      settings.max_message_delay
-    );
-    await delay(delaySeconds * 1000);
+
     for (const item of this.queueItems) {
       const currentDate = new Date()
       let currentHour = currentDate.getHours()
       let currentMinute = currentDate.getMinutes()
-      if (!(currentHour <= settings.end_Hour && currentHour >= settings.start_Hour) && (currentMinute >= settings.start_Minute && currentMinute < settings.end_Minute))
-      {
-        logger.Log(
-          globalConfig.LogTypes.info,
-          globalConfig.LogLocations.all,
-          `The queue [${this.queue._id.toString()}] exceeded the daily sending hour range, therefore it was stopped by the service.`
-        );
-        this.queue.status === QUEUE_STATUS.PAUSED
-        await queueModel.updateOne(
-          {_id: this.queue._id.toString()},
-            {$set:this.queue}
-        );
-        closeSocket(socket, parentPort);
-        break;
-      }
+      // if (!(currentHour <= settings.end_Hour && currentHour >= settings.start_Hour) && (currentMinute >= settings.start_Minute && currentMinute < settings.end_Minute))
+      // {
+      //   logger.Log(
+      //     globalConfig.LogTypes.info,
+      //     globalConfig.LogLocations.all,
+      //     `The queue [${this.queue._id.toString()}] exceeded the daily sending hour range, therefore it was stopped by the service.`
+      //   );
+      //   this.queue.status === QUEUE_STATUS.PAUSED
+      //   await queueModel.updateOne(
+      //     {_id: this.queue._id.toString()},
+      //       {$set:this.queue}
+      //   );
+      //   closeSocket(this.socket, parentPort);
+      //   break;
+      // }
       
       if (this.counter % this.checkStatusPerItem === 0)
       {
@@ -166,7 +181,7 @@ class MessageController {
             globalConfig.LogLocations.all,
             `The Queue [${this.queue._id.toString()}] stopped by user [${this.userProps.credit.userId}]`
           );
-          closeSocket(socket, parentPort);
+          closeSocket(this.socket, parentPort);
           break;
         }
       }
@@ -174,22 +189,16 @@ class MessageController {
       if (customer) {
         const currentReceiver = `${customer.phone}${this.baseIdName}`;
         await this.SendDataToReceiver(currentReceiver)
-        
         logger.Log(
           globalConfig.LogTypes.info,
           globalConfig.LogLocations.all,
           `Message sent to [${customer._id.toString()}] by [${settings.userId}]`
         );
-        this.counter++;
-        const delaySeconds = getRandomDelay(
-          settings.min_message_delay,
-          settings.max_message_delay
-        );
-        await delay(delaySeconds * 1000);
         const mergedData = mergeUpsertUpdateData(this.automationUpserts, this.automationUpdates)
-        await this.AnalysisReceiverDataAndSave(mergedData, customer, item)
+        await this.AnalysisReceiverDataAndSave(mergedData, customer, item)        
         this.automationUpdates = []
         this.automationUpserts = []
+        this.counter++;
       }
     }
 
@@ -205,7 +214,7 @@ class MessageController {
       | USER [${this.queue.userId}] 
       | QUEUE [${this.queue._id.toString()}] | SESSION [${this.userProps.session}]`
     );
-    closeSocket(socket, parentPort);
+    closeSocket(this.socket, parentPort)
   }
   
   async SendDataToReceiver(currentReceiver){
@@ -279,6 +288,15 @@ class MessageController {
         break;
       }
     }
+    const settings = this.userProps.settings;
+    const delaySeconds = getRandomDelay(
+      settings.min_message_delay,
+      settings.max_message_delay
+    );
+    await delay(delaySeconds * 1000)
+    setTimeout(() => {
+      
+    }, delaySeconds * 1000);
   }
 
   async AnalysisReceiverDataAndSave(mergedData, currentCustomer, queueItem){
@@ -288,65 +306,85 @@ class MessageController {
     // queueItem message_status u girilecek
     // creditTransaction girisi yapilacak
     // user dan kredi dusulmesi yapilacak
-
+    
     let spendCount = 0;
     let extendedMessagesForCustomers = []
-    mergedData.map((mergedItem) => {
-      if(mergedItem.remoteJid === `${currentCustomer.phone}${this.baseIdName}`)
-      {
-        let info = {
-          sent_at: undefined,
-          status: undefined,
-          message: undefined,
-        }
-        info.sent_at = new Date(mergedItem.sendAt.low * 1000)
-        info.message = Object.keys(mergedItem.message)[0]
-        if(mergedItem.status === MESSAGE_STATUS.ERROR)
+    if (mergedData && mergedData.length > 0)
+    {
+      mergedData.map((mergedItem) => {
+        console.log(JSON.stringify(mergedItem, undefined, 2))
+        if (mergedItem)
         {
-          spendCount += 0;
-          info.status = "Not Sent"
-          
+          if(mergedItem.remoteJid === `${currentCustomer.phone}${this.baseIdName}`)
+          {
+            let info = {
+              sent_at: undefined,
+              status: undefined,
+              message: undefined,
+            }
+            info.sent_at = new Date(mergedItem.sendAt.low * 1000)
+            info.message = Object.keys(mergedItem.message)[0]
+            if(mergedItem.status === MESSAGE_STATUS.ERROR)
+            {
+              spendCount += 0;
+              info.status = "Not Sent"
+            }
+            else {
+              spendCount += 1
+              if (mergedItem.status === MESSAGE_STATUS.DELIVERY_ACK)
+                info.status = "Sent"
+              else if(mergedItem.status === MESSAGE_STATUS.PENDING)
+                info.status = "Pending"
+              else if(mergedItem.status === MESSAGE_STATUS.PLAYED)
+                info.status = "Played"
+              else if(mergedItem.status === MESSAGE_STATUS.READ)
+                info.status = "Read"
+              else if(mergedItem.status === MESSAGE_STATUS.SERVER_ACK)
+                info.status = "Sent"
+            }
+            extendedMessagesForCustomers.push(info)
+          }
         }
-        else {
-          spendCount += 1
-          if (mergedItem.status === MESSAGE_STATUS.DELIVERY_ACK)
-            info.status = "Sent"
-          else if(mergedItem.status === MESSAGE_STATUS.PENDING)
-            info.status = "Pending"
-          else if(mergedItem.status === MESSAGE_STATUS.PLAYED)
-            info.status = "Played"
-          else if(mergedItem.status === MESSAGE_STATUS.READ)
-            info.status = "Read"
-          else if(mergedItem.status === MESSAGE_STATUS.SERVER_ACK)
-            info.status = "Sent"
-        }
-        extendedMessagesForCustomers.push(info)
+        else
+          extendedMessagesForCustomers.push({})
+      })
+
+      logger.Log(
+        globalConfig.LogTypes.info,
+        globalConfig.LogLocations.consoleAndFile,
+        `Proccessing data for receiver info |
+          User => ${this.queue.userId} | Queue => ${this.queue._id.toString()} | current customer => ${currentCustomer._id.toString()}`
+      );
+      queueItem.spendCredit = spendCount;
+      queueItem.message_status = extendedMessagesForCustomers
+      console.log(queueItem.message_status)
+      queueItem.spendCredit = spendCount;
+
+      await queueItemModel.updateOne({_id: new mongoose.Types.ObjectId(queueItem._id)}, {$set: queueItem})
+      this.userProps.credit.totalAmount -= spendCount
+      await creditsModel.updateOne({_id:  new mongoose.Types.ObjectId(this.userProps.credit._id)}, {$set: this.userProps.credit})
+      await creditTransactionModel.create({
+        user_id: this.userProps.credit.userId.toString(),
+        amount: spendCount,
+        transaction_date: new Date(Date.now()),
+        transaction_type: "spent"
+      })
+      logger.Log(
+        globalConfig.LogTypes.info,
+        globalConfig.LogLocations.all,
+        `Credit Transaction created. | SPENT | ${this.queue.userId}`
+      );
       }
-    })
-    logger.Log(
-      globalConfig.LogTypes.info,
-      globalConfig.LogLocations.consoleAndFile,
-      `Proccessing data for receiver info |
-       User => ${this.queue.userId} | Queue => ${this.queue._id.toString()}
-       | Customer => ${this.queueItems.customerId}`
-    );
-    queueItem.spendCredit = spendCount;
-    queueItem.message_status = JSON.stringify(extendedMessagesForCustomers, undefined, 2)
-    
-    await queueItemModel.updateOne({_id: queueItem._id}, queueItem)
-    this.userProps.credit.totalAmount -= spendCount
-    await creditsModel.updateOne({_id: this.userProps.credit._id}, {$set: this.userProps.credit})
-    await creditTransactionModel.create({
-      user_id: this.userProps.credit.userId.toString(),
-      amount: spendCount,
-      transaction_date: new Date(Date.now()),
-      transaction_type: "spent"
-    })
-    logger.Log(
-      globalConfig.LogTypes.info,
-      globalConfig.LogLocations.all,
-      `Credit Transaction created. | SPENT | ${this.queue.userId}`
-    );
+      else
+      {
+        logger.Log(
+          globalConfig.LogTypes.error,
+          globalConfig.LogLocations.all,
+          `NO HISTYORY DATA | ERROR | CRITICAL`
+        );
+      }
   }
+    
+  
 }
 module.exports = { MessageController };

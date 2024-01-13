@@ -1,23 +1,62 @@
 const fs = require("fs")
-const { MessageType, MessageOptions, Mimetype, Browsers } = require('@whiskeysockets/baileys')
+const { MessageType, MessageOptions, Mimetype, Browsers, delay, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys')
 const { globalConfig } = require("./config");
 
-// generating socket options
 
-const { wpSessionCollection } = require("../model/wpSession.types")
+const { wpSessionCollection } = require("../model/wpSession.types");
+const { delayThread } = require("./utilties");
 
 const generateSocketOptions = (state) => {
-  const options = {
+  const socketOpt ={
     printQRInTerminal: false,
     auth: state,
+    defaultQueryTimeoutMs: 1000,
     receivedPendingNotifications: false,
-    defaultQueryTimeoutMs: undefined,
     markOnlineOnConnect: true,
     syncFullHistory: false,
+    keepAliveIntervalMs: 1000,
     browser: Browsers.ubuntu("Desktop"),
-  };
-  return options;
+  }
+  return socketOpt;
 }
+// generating socket options
+const MESSAGE_STATUS = {
+  DELIVERY_ACK: 3, // teslimat onayi
+  ERROR: 0, // hata
+  PENDING: 1, // bekleniyor
+  PLAYED: 5, // oynatildi
+  READ: 4, // okundu
+  SERVER_ACK: 2 // 
+}
+const MESSAGE_STRATEGY = {
+  JUST_TEXT: 0, // 1 credit
+  JUST_FILE: 1,
+  MULTIPLE_FILE: 2,
+  MULTIPLE_FILE_MESSAGE: 3,
+  ONE_FILE_MESSAGE: 4
+}
+const FILE_TYPE = {
+  MEDIA: 0,
+  FILE: 1
+}
+const isMedia = (extension) => {
+  const isMediaCondition = (extension === ".jpg" | extension === ".png" ||  extension === ".jpeg" || extension === ".mp4")
+  return isMediaCondition ? FILE_TYPE.MEDIA : FILE_TYPE.FILE
+}
+const defineStrategy = (message, files) => {
+  const hasMessage = !(!message && message !== "undefined");
+  const hasFiles = files && files.length > 0;
+  if (hasMessage && !hasFiles) return MESSAGE_STRATEGY.JUST_TEXT;
+  if (!hasMessage && hasFiles) {
+      return files.length === 1 ? MESSAGE_STRATEGY.JUST_FILE : MESSAGE_STRATEGY.MULTIPLE_FILE;
+  }
+  if (hasMessage && hasFiles) {
+      return files.length === 1 ? MESSAGE_STRATEGY.ONE_FILE_MESSAGE : MESSAGE_STRATEGY.MULTIPLE_FILE_MESSAGE;
+  }
+
+  // Handle unexpected case
+  throw new Error("Invalid strategy conditions");
+};
 
 const checkAuthentication = async(logger, controller, session) => {
   if (session) {
@@ -104,36 +143,20 @@ const closeSocket = (socket, parentPort) => {
   socket.end(undefined);
   parentPort.postMessage('terminate');
 }
-const MESSAGE_STATUS = {
-  DELIVERY_ACK: 3, // teslimat onayi
-  ERROR: 0, // hata
-  PENDING: 1, // bekleniyor
-  PLAYED: 5, // oynatildi
-  READ: 4, // okundu
-  SERVER_ACK: 2 // 
-}
-const MESSAGE_STRATEGY = {
-  JUST_TEXT: 0, // 1 credit
-  JUST_FILE: 1,
-  MULTIPLE_FILE: 2,
-  MULTIPLE_FILE_MESSAGE: 3,
-  ONE_FILE_MESSAGE: 4
-}
-const FILE_TYPE = {
-  MEDIA: 0,
-  FILE: 1
-}
+
 module.exports = {
+  MESSAGE_STATUS,
+  FILE_TYPE,
+  MESSAGE_STRATEGY,
   generateSocketOptions,
   closeSocket, 
   sendMedia, 
   sendMediaAndContentMessage, 
-  sendMessage, 
+  sendMessage,
+  defineStrategy, 
   checkAuthentication,
   sendFile,
-  FILE_TYPE,
-  MESSAGE_STATUS,
-  MESSAGE_STRATEGY
+  isMedia
 }
 
 
