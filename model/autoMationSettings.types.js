@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
 
-export const automationSettingsSchema = new Schema({
+const automationSettingsSchema = new mongoose.Schema({
     userId: {
-        type: Types.ObjectId,
-        ref: 'User',
+        type: String,
         required: true
     },
     min_message_delay: {

@@ -29,7 +29,7 @@ credit transaction dataları çekilecek (currentCredit | total spend | average m
 
 - admin endpoints
 	=> user details
-	=> extraPhone count permission  
+	=> extraPhone count  permission  
 	=> ban user
 	=> upload credit to user
 	=> see logs

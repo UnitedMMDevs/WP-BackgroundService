@@ -58,14 +58,11 @@ class MessageController {
 
     this.controller = new wpClient.WpController(
       this.userProps.session
-    );
-    
-    
+    ); 
   }
   async CheckConnectionSuccess(){
     return this.isConnected
   }
-
   async InitializeSocket() {
     logger.Log(globalConfig.LogTypes.info,
       globalConfig.LogLocations.consoleAndFile,
@@ -134,7 +131,6 @@ class MessageController {
   
   async ExecuteAutomation(){
     const settings = this.userProps.settings;
-    let totalSpend_count = 0;
     const delaySeconds = getRandomDelay(
       settings.min_message_delay,
       settings.max_message_delay
@@ -173,24 +169,6 @@ class MessageController {
           closeSocket(socket, parentPort);
           break;
         }
-        else
-        {
-          if(totalSpend_count > 0)
-          {
-            await creditTransactionModel.create({
-              user_id: this.userProps.credit.userId.toString(),
-              amount: totalSpend_count,
-              transaction_date: new Date(Date.now()),
-              transaction_type: "spent"
-            })
-            logger.Log(
-              globalConfig.LogTypes.info,
-              globalConfig.LogLocations.all,
-              `Credit Transaction created. | SPENT | ${this.queue.userId}`
-            );
-            totalSpend_count = 0
-          }
-        }
       }
       const customer = await customerModel.findById(item.customerId);
       if (customer) {
@@ -209,7 +187,7 @@ class MessageController {
         );
         await delay(delaySeconds * 1000);
         const mergedData = mergeUpsertUpdateData(this.automationUpserts, this.automationUpdates)
-        totalSpend_count += await this.AnalysisReceiverDataAndSave(mergedData, customer, item)
+        await this.AnalysisReceiverDataAndSave(mergedData, customer, item)
         this.automationUpdates = []
         this.automationUpserts = []
       }
@@ -227,6 +205,7 @@ class MessageController {
       | USER [${this.queue.userId}] 
       | QUEUE [${this.queue._id.toString()}] | SESSION [${this.userProps.session}]`
     );
+    closeSocket(socket, parentPort);
   }
   
   async SendDataToReceiver(currentReceiver){
@@ -353,10 +332,21 @@ class MessageController {
     );
     queueItem.spendCredit = spendCount;
     queueItem.message_status = JSON.stringify(extendedMessagesForCustomers, undefined, 2)
+    
     await queueItemModel.updateOne({_id: queueItem._id}, queueItem)
     this.userProps.credit.totalAmount -= spendCount
-    await creditsModel.updateOne({_id: this.userProps.credit._id}, this.userProps.credit)
-    return spendCount
+    await creditsModel.updateOne({_id: this.userProps.credit._id}, {$set: this.userProps.credit})
+    await creditTransactionModel.create({
+      user_id: this.userProps.credit.userId.toString(),
+      amount: spendCount,
+      transaction_date: new Date(Date.now()),
+      transaction_type: "spent"
+    })
+    logger.Log(
+      globalConfig.LogTypes.info,
+      globalConfig.LogLocations.all,
+      `Credit Transaction created. | SPENT | ${this.queue.userId}`
+    );
   }
 }
 module.exports = { MessageController };

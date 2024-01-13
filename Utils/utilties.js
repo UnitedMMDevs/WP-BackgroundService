@@ -12,7 +12,15 @@ getRandomDelay = (min, max) => {
 
 const defineStatusCheckDelay = (totalItemCount) =>
 {
-    if(totalItemCount < 100)
+    if (totalItemCount < 10)
+    {
+        return 1;
+    }
+    else if (totalItemCount < 2)
+    {
+        return 2;
+    }
+    else if(totalItemCount < 100)
     {
         return 5;
     }

@@ -4,10 +4,7 @@ const { userModel } = require("../model/user.types");
 const { creditsModel } = require("../model/credits.types");
 const { globalConfig } = require("../Utils/config");
 const { wpSessionCollection } = require("../model/wpSession.types")
-
-const {
-  automationSettingsModel,
-} = require("../model/autoMationSettings.types");
+const { automationSettingsModel } = require("../model/autoMationSettings.types")
 const { default: mongoose } = require("mongoose");
 const fs = require("fs");
 const { logger } = require('../Utils/logger');
