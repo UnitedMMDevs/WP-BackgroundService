@@ -51,6 +51,7 @@ class MessageController {
     this.files = files;
     this.queueItems = queueItems;
     this.checkStatusPerItem = defineStatusCheckDelay(this.queueItems.length);
+    console.log('check per item value', this.checkStatusPerItem)
     this.baseIdName = "@s.whatsapp.net";
     this.isConnected = false;
     this.automationUpdates = []
@@ -61,6 +62,7 @@ class MessageController {
       this.userProps.session
     );
     this.queueCompletedState = QUEUE_STATUS.IN_PROGRESS
+    this.counter = 0
   }
   async CheckConnectionSuccess(){
     return this.isConnected
@@ -177,6 +179,7 @@ class MessageController {
       
       if (this.counter % this.checkStatusPerItem === 0)
       {
+        console.log("|||||||||||||||||CHECKED|||||||||||||||||||||")
         const currentState = await queueModel.findById(this.queue._id.toString());
         if (currentState.status === QUEUE_STATUS.PAUSED)
         {
