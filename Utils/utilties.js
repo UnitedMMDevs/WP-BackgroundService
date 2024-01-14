@@ -12,7 +12,7 @@ const defineStatusCheckDelay = (totalItemCount) =>
     {
         return 1;
     }
-    else if (totalItemCount < 2)
+    else if (totalItemCount < 50)
     {
         return 2;
     }
