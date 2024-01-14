@@ -138,10 +138,10 @@ class MessageController {
         } 
       }
     })
-    await delay(4 * 1000)
+    await delay(4 * 1000) // sockete bekleme sureso
     setTimeout(() => {
       
-    }, 4 * 1000);
+    }, 4 * 1000); // bu process bekleme suresi
     if(this.CheckConnectionSuccess())
       await this.ExecuteAutomation()
     else
