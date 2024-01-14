@@ -59,7 +59,8 @@ class MessageController {
     this.credsUpdated = false
     this.controller = new wpClient.WpController(
       this.userProps.session
-    ); 
+    );
+    this.queueCompletedState = QUEUE_STATUS.IN_PROGRESS
   }
   async CheckConnectionSuccess(){
     return this.isConnected
@@ -158,21 +159,21 @@ class MessageController {
       const currentDate = new Date()
       let currentHour = currentDate.getHours()
       let currentMinute = currentDate.getMinutes()
-      // if (!(currentHour <= settings.end_Hour && currentHour >= settings.start_Hour) && (currentMinute >= settings.start_Minute && currentMinute < settings.end_Minute))
-      // {
-      //   logger.Log(
-      //     globalConfig.LogTypes.info,
-      //     globalConfig.LogLocations.all,
-      //     `The queue [${this.queue._id.toString()}] exceeded the daily sending hour range, therefore it was stopped by the service.`
-      //   );
-      //   this.queue.status === QUEUE_STATUS.PAUSED
-      //   await queueModel.updateOne(
-      //     {_id: this.queue._id.toString()},
-      //       {$set:this.queue}
-      //   );
-      //   closeSocket(this.socket, parentPort);
-      //   break;
-      // }
+
+      const condition = !((currentHour > settings.end_Hour || currentHour < settings.start_Hour) ||
+      (currentHour === settings.start_Hour && currentMinute < settings.start_Minute) ||
+      (currentHour === settings.end_Hour && currentMinute >= settings.end_Minute));
+      if (!condition)
+      {
+        logger.Log(
+          globalConfig.LogTypes.info,
+          globalConfig.LogLocations.all,
+          `The queue [${this.queue._id.toString()}] exceeded the daily sending hour range, therefore it was stopped by the service.`
+        );
+        this.queueCompletedState = QUEUE_STATUS.PENDING
+        closeSocket(this.socket, parentPort);
+        break;
+      }
       
       if (this.counter % this.checkStatusPerItem === 0)
       {
@@ -185,6 +186,7 @@ class MessageController {
             `The Queue [${this.queue._id.toString()}] stopped by user [${this.userProps.credit.userId}]`
           );
           closeSocket(this.socket, parentPort);
+          this.queueCompletedState = QUEUE_STATUS.PAUSED
           break;
         }
       }
@@ -204,8 +206,8 @@ class MessageController {
         this.counter++;
       }
     }
-
-    this.queue.status = QUEUE_STATUS.COMPLETED;
+    this.queueCompletedState = this.queueCompletedState === QUEUE_STATUS.IN_PROGRESS ? QUEUE_STATUS.COMPLETED : this.queueCompletedState
+    this.queue.status = this.queueCompletedState;
     await queueModel.updateOne(
       {_id: this.queue._id.toString()},
         {$set:this.queue}
@@ -217,7 +219,8 @@ class MessageController {
       | USER [${this.queue.userId}] 
       | QUEUE [${this.queue._id.toString()}] | SESSION [${this.userProps.session}]`
     );
-    closeSocket(this.socket, parentPort)
+    if(this.queueCompletedState === QUEUE_STATUS.COMPLETED)
+      closeSocket(this.socket, parentPort)
   }
   
   async SendDataToReceiver(currentReceiver){
