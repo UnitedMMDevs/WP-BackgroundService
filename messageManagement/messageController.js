@@ -138,7 +138,10 @@ class MessageController {
         } 
       }
     })
-    await delay(1 * 1000)
+    await delay(4 * 1000)
+    setTimeout(() => {
+      
+    }, 4 * 1000);
     if(this.CheckConnectionSuccess())
       await this.ExecuteAutomation()
     else
@@ -150,7 +153,7 @@ class MessageController {
   
   async ExecuteAutomation(){
     const settings = this.userProps.settings;
-
+    await delay(2 * 1000)
     for (const item of this.queueItems) {
       const currentDate = new Date()
       let currentHour = currentDate.getHours()
@@ -346,7 +349,13 @@ class MessageController {
           }
         }
         else
-          extendedMessagesForCustomers.push({})
+          {
+            spendCount += 1
+            extendedMessagesForCustomers.push({
+            sent_at: new Date(),
+            status: "Delivered",
+            message: "No info"
+          })}
       })
 
       logger.Log(
