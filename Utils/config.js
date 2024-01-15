@@ -7,7 +7,7 @@ getRootPath = () => {
 }
 
 const globalConfig = {
-    mongo_url: "mongodb://127.0.0.1:27017/proWhatsApp",
+    mongo_url: "mongodb://localhost:27017/proWhatsApp",
     baseRootPath: getRootPath(),
     LogTypes: {
         info: 'info',

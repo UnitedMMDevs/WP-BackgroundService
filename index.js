@@ -15,14 +15,7 @@ const runScript = async () => {
       logger.Log(globalConfig.LogTypes.info,
         globalConfig.LogLocations.consoleAndFile,
         "Service Started for searching active queue");
-      await mongoose.connect(globalConfig.mongo_url).then(async(result) => {
-        logger.Log(
-          globalConfig.LogTypes.info,
-          globalConfig.LogLocations.consoleAndFile,
-
-          `Connected To the Database`
-        );
-      });
+      
       const currentDate = new Date();
       const currentHour = currentDate.getHours();
       const currentMinute = currentDate.getMinutes();
@@ -66,6 +59,14 @@ process.on('SIGINT', async() => {
   logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.console, 'Database connection has been closed.');
   process.exit(0);
 });
+mongoose.connect(globalConfig.mongo_url).then(async(result) => {
+  logger.Log(
+    globalConfig.LogTypes.info,
+    globalConfig.LogLocations.consoleAndFile,
+
+    `Connected To the Database`
+  );
+}).then();
 schedule.scheduleJob("*/1 * * * *", async function() {
   await runScript();
 });
