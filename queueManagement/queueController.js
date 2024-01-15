@@ -98,7 +98,7 @@ class QueueController {
     const queueItems = await queueItemModel.find({
       queueId: queueId,
       spendCredit: 0,
-      message_status: undefined
+      message_status: ""
     })
     console.log(queueItems.length)
     return queueItems;

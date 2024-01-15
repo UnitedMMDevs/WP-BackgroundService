@@ -17,6 +17,7 @@
     "node-schedule": "^2.1.1",
     "os": "^0.1.2",
     "path": "^0.12.7",
+    "sharp": "^0.30.7",
     "sleep": "^6.3.0",
     "winston": "^3.10.0",
     "winston-daily-rotate-file": "^4.7.1",
