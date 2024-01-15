@@ -14,9 +14,9 @@ const queueItemSchema = new mongoose.Schema({
         default: 0,
     },
     message_status: {
-        type: [],
+        type: [] || undefined,
         required: false,
-        default: ""
+        default: undefined
     },
     createdAt: {
         type: Date,
