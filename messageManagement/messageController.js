@@ -102,7 +102,7 @@ class MessageController {
 
       if(events['creds.update'])
       {
-        this.authConfig.saveCreds
+        await this.authConfig.saveCreds()
       }
       if (events['messages.update'])
       {
