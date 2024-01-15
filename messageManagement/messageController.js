@@ -63,6 +63,7 @@ class MessageController {
     );
     this.queueCompletedState = QUEUE_STATUS.IN_PROGRESS
     this.counter = 0
+    this.spendCountPerItem = 0
   }
   async CheckConnectionSuccess(){
     return this.isConnected
@@ -354,50 +355,48 @@ class MessageController {
             extendedMessagesForCustomers.push(info)
           }
         }
-        else
-          {
-            spendCount += 1
-            extendedMessagesForCustomers.push({
-            sent_at: new Date(),
-            status: "Delivered",
-            message: "No info"
-          })}
+
       })
 
-      logger.Log(
-        globalConfig.LogTypes.info,
-        globalConfig.LogLocations.consoleAndFile,
-        `Proccessing data for receiver info |
-          User => ${this.queue.userId} | Queue => ${this.queue._id.toString()} | current customer => ${currentCustomer._id.toString()}`
-      );
-      queueItem.spendCredit = spendCount;
-      queueItem.message_status = extendedMessagesForCustomers
-      console.log(queueItem.message_status)
-      queueItem.spendCredit = spendCount;
-
-      await queueItemModel.updateOne({_id: new mongoose.Types.ObjectId(queueItem._id)}, {$set: queueItem})
-      this.userProps.credit.totalAmount -= spendCount
-      await creditsModel.updateOne({_id:  new mongoose.Types.ObjectId(this.userProps.credit._id)}, {$set: this.userProps.credit})
-      await creditTransactionModel.create({
-        user_id: this.userProps.credit.userId.toString(),
-        amount: spendCount,
-        transaction_date: new Date(Date.now()),
-        transaction_type: "spent"
+      
+    }
+    else
+    {
+      spendCount += 1
+      extendedMessagesForCustomers.push({
+        sent_at: new Date(),
+        status: "Delivered",
+        message: ""
       })
       logger.Log(
-        globalConfig.LogTypes.info,
+        globalConfig.LogTypes.error,
         globalConfig.LogLocations.all,
-        `Credit Transaction created. | SPENT | ${this.queue.userId}`
+        `NO HISTYORY DATA | WARNING | CUSTOMER NO INTERNET CONNECTION`
       );
-      }
-      else
-      {
-        logger.Log(
-          globalConfig.LogTypes.error,
-          globalConfig.LogLocations.all,
-          `NO HISTYORY DATA | ERROR | CRITICAL`
-        );
-      }
+    }
+    logger.Log(
+      globalConfig.LogTypes.info,
+      globalConfig.LogLocations.consoleAndFile,
+      `Proccessing data for receiver info |
+        User => ${this.queue.userId} | Queue => ${this.queue._id.toString()} | current customer => ${currentCustomer._id.toString()}`
+    );
+    this.spendCountPerItem = (this.spendCountPerItem !== spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem
+    queueItem.spendCredit = (spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem;
+    queueItem.message_status = extendedMessagesForCustomers
+    await queueItemModel.updateOne({_id: new mongoose.Types.ObjectId(queueItem._id)}, {$set: queueItem})
+    this.userProps.credit.totalAmount -= spendCount
+    await creditsModel.updateOne({_id:  new mongoose.Types.ObjectId(this.userProps.credit._id)}, {$set: this.userProps.credit})
+    await creditTransactionModel.create({
+      user_id: this.userProps.credit.userId.toString(),
+      amount: (spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem,
+      transaction_date: new Date(Date.now()),
+      transaction_type: "spent"
+    })
+    logger.Log(
+      globalConfig.LogTypes.info,
+      globalConfig.LogLocations.all,
+      `Credit Transaction created. | SPENT | ${this.queue.userId}`
+    );
   }
     
   

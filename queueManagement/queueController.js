@@ -34,6 +34,7 @@ class QueueController {
       await queueModel.updateOne({_id: this.queue._id}, this.queue);
       let messageController = new MessageController(dependencies)
       await messageController.InitializeSocket();
+      process.exit(0)
     }
   }
   async InitializeDependencies() {
