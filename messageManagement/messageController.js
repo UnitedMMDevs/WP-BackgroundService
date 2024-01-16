@@ -166,7 +166,7 @@ class MessageController {
       const condition = !((currentHour > settings.end_Hour || currentHour < settings.start_Hour) ||
       (currentHour === settings.start_Hour && currentMinute < settings.start_Minute) ||
       (currentHour === settings.end_Hour && currentMinute >= settings.end_Minute));
-      if (!condition)
+      if (condition)
       {
         logger.Log(
           globalConfig.LogTypes.info,
