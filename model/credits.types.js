@@ -6,9 +6,8 @@ const mongoose = require('mongoose');
 
 const creditSchema = new mongoose.Schema({
     userId: {
-        type: mongoose.Types.ObjectId,
+        type: String,
         required: true,
-        ref: 'User'
     },
     totalAmount: {
         type: Number,
