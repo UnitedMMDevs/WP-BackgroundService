@@ -163,17 +163,17 @@ class MessageController {
       let currentHour = currentDate.getHours()
       let currentMinute = currentDate.getMinutes()
 
-      const condition = !((currentHour > settings.end_Hour || currentHour < settings.start_Hour) ||
-      (currentHour === settings.start_Hour && currentMinute < settings.start_Minute) ||
-      (currentHour === settings.end_Hour && currentMinute >= settings.end_Minute));
-      if (condition)
+      const condition = ((currentHour > settings.start_Hour && currentHour < settings.end_Hour) ||
+      (currentHour === settings.start_Hour && currentMinute >= settings.start_Minute) ||
+      (currentHour === settings.end_Hour && currentMinute <= settings.end_Minute));
+      if (!condition)
       {
         logger.Log(
           globalConfig.LogTypes.info,
           globalConfig.LogLocations.all,
           `The queue [${this.queue._id.toString()}] exceeded the daily sending hour range, therefore it was stopped by the service.`
         );
-        this.queueCompletedState = QUEUE_STATUS.PENDING
+        this.queueCompletedState = QUEUE_STATUS.PAUSED
         closeSocket(this.socket, parentPort);
         break;
       }
