@@ -5,23 +5,28 @@ YAPILACAKLAR
 		-> reset password baglanmasi
 		-> responsive duzeltmeleri
 	MUHAMMED ALI
-		-> OTOMATASYON KUYRUK ZAMAN ARALIGI KONTROLU ORADAKI KOSUL DUZGUN AYARLANACAK
-		-> REGISTER FONKSIYONU HIZLANDIRILACAK
-		-> SOCKET QR CODE PROBLEMI COZULECEK
+		-> OTOMATASYON KUYRUK ZAMAN ARALIGI KONTROLU ORADAKI KOSUL DUZGUN AYARLANACAK OK
+		-> REGISTER FONKSIYONU HIZLANDIRILACAK OK
+		-> SOCKET QR CODE PROBLEMI COZULECEK 
 		-> BUSINESS CONNECTION HATASINA BAKILACAK
+		-> DELETE USER FONKSIYONU DUZELTILECEK OK
 		
 - admin endpoints
-	=> user details
-	=> extraPhone count  permission  
-	=> ban user
-	=> upload credit to user
+	=> user list logo name surname email lastlogin registerDate OK
+	=> user details userid email phone ban status registerdate spend credit OK
+	=> extraPhone count  permission OK  
+	=> ban user OK 
+	=> upload credit to user OK
+	=> user sessions OK
+	=> credit Chart OK
+	=> online users
+	
+	
+	=> activities
 	=> see logs
 	=> database import export
-	=> online users
-	=> credit Chart
-	=> user sessions
-	=> queue list
-	=> activities
+	
+	
 
 - activities entegre edilecek
 front-end

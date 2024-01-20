@@ -2,9 +2,8 @@ const mongoose = require('mongoose');
 
 const extraNumberSchema = new mongoose.Schema({
     userId: {
-        type: Types.ObjectId,
+        type: String,
         required: true,
-        ref: 'User'
     },
     phone: {
         type: String,
