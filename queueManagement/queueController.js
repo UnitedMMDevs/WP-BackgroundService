@@ -43,13 +43,13 @@ class QueueController {
     try {
       logger.Log(globalConfig.LogTypes.info,
         globalConfig.LogLocations.consoleAndFile,
-        `Service collection dependencies for this queue [${this.queue._id.toString()}]`
+        `Servis aktif kuyruğun bağımlılıklarını toplamaya başladı. [${this.queue._id.toString()}]`
       )
       this.currentUser = await userModel.findById(this.queue.userId);
       if (!this.currentUser) {
         logger.Log(globalConfig.LogTypes.error,
           globalConfig.LogLocations.all,
-          `User Not Found error!!!!`)
+          `Bilinmeyen kullanıcı hatası!!!!`)
         return null;
       }
       this.userDependencies = await this.getUserDependencies(this.currentUser._id.toString());
@@ -66,7 +66,7 @@ class QueueController {
       logger.Log(
         globalConfig.LogTypes.error,
         globalConfig.LogLocations.all,
-        `System Fail message: ${err.message.toString()} for this queue: [${this.queue._id.toString()}]`
+        `Servis hata mesajı: ${err.message.toString()} aktif kuyruk id: [${this.queue._id.toString()}]`
       )
       return null;
     }
@@ -114,7 +114,7 @@ class QueueController {
     } catch (err) {
       logger.Log(globalConfig.LogTypes.warn,
         globalConfig.LogLocations.consoleAndFile,
-        `Cannot find the files for ${this.queue._id.toString()}`)
+        `Bu kuyruk için bir dosya bulunamadı. ${this.queue._id.toString()}`)
       return [];
     }
   }
@@ -124,9 +124,6 @@ parentPort.on("message", async (message) => {
   // listening for start operation 
   // and opening new thread for these workflow
   if (message === "start") {
-    logger.Log(globalConfig.LogTypes.info,
-      globalConfig.LogLocations.console,
-      `|||||||||||||| WORKER HAS BEEN START ${threadId} |||||||||||`)
     const { queue } = workerData;
     if (queue) {
       const controller = new QueueController(queue);
@@ -139,7 +136,6 @@ parentPort.on("message", async (message) => {
   }
   if (message === 'terminate')
   {
-    console.log("terminated");
     process.exit(0);
   }
 });

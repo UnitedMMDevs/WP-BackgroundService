@@ -71,7 +71,7 @@ class MessageController {
   async InitializeSocket() {
     logger.Log(globalConfig.LogTypes.info,
       globalConfig.LogLocations.consoleAndFile,
-      `Socket initializing process start...`
+      `Servis aktif kuyruk için socket oluşturma aşamasında.`
     )
     this.authConfig = await checkAuthentication(logger, this.controller, this.userProps.session);
     if (!this.authConfig.state && !this.authConfig.saveCreds) return;
@@ -87,14 +87,14 @@ class MessageController {
               this.InitializeSocket()
               logger.Log(globalConfig.LogTypes.info,
                 globalConfig.LogLocations.consoleAndFile,
-                `Service retry connect to [${this.userProps.credit.userId.toString()}]'s Whatsapp account successfully`
+                `Servis kullanıcının whatsapp oturumuna bağlanmaya çalışıyor. [${this.userProps.credit.userId.toString()}]`
               )
             }
         }
         else if (connection === 'open'){
           logger.Log(globalConfig.LogTypes.info,
             globalConfig.LogLocations.consoleAndFile,
-            `Service Connected to [${this.userProps.credit.userId.toString()}]'s Whatsapp account successfully`
+            `Servis kullanıcının whatsapp oturumuna [${this.userProps.credit.userId.toString()}] başarılı şekilde bağlandı.`
           )
           this.isConnected = true;
           await this.authConfig.saveCreds()
@@ -110,7 +110,7 @@ class MessageController {
         const data = events['messages.update']
         logger.Log(globalConfig.LogTypes.info,
           globalConfig.LogLocations.console,
-          `Service proccessing update data for messages... | queue => [${this.queue._id.toString()}]`
+          `Servis bildirimleri kuyruk için toplama işlemi yapıyor. | Kuyruk => [${this.queue._id.toString()}]`
           )
           if (data)
           {
@@ -127,7 +127,7 @@ class MessageController {
       {
         logger.Log(globalConfig.LogTypes.info,
           globalConfig.LogLocations.console,
-          `Service proccessing upsert data for messages... | queue => [${this.queue._id.toString()}]`
+          `Servis bildirimleri kuyruk için toplama işlemi yapıyor. | Kuyruk => [${this.queue._id.toString()}]`
         )
         const data = events['messages.upsert']
         if (data)
@@ -151,7 +151,7 @@ class MessageController {
     else
       logger.Log(globalConfig.LogTypes.warn,
         globalConfig.LogLocations.all,
-        `User WP Account Connection error | ${this.queue.userId.toString()} , Session : [${this.userProps.session}]`
+        `Kullanıcı whatsapp bağlantı hatası. | ${this.queue.userId.toString()} , Oturum : [${this.userProps.session}]`
       )
   }
   
@@ -171,7 +171,7 @@ class MessageController {
         logger.Log(
           globalConfig.LogTypes.info,
           globalConfig.LogLocations.all,
-          `The queue [${this.queue._id.toString()}] exceeded the daily sending hour range, therefore it was stopped by the service.`
+          `Kuyruk [${this.queue._id.toString()}] gönderim zaman aralığını geçti. Servis bu yüzden gönderim işlemini beklemeye aldı.`
         );
         this.queueCompletedState = QUEUE_STATUS.PAUSED
         closeSocket(this.socket, parentPort);
@@ -180,14 +180,13 @@ class MessageController {
       
       if (this.counter % this.checkStatusPerItem === 0)
       {
-        console.log("|||||||||||||||||CHECKED|||||||||||||||||||||")
         const currentState = await queueModel.findById(this.queue._id.toString());
         if (currentState.status === QUEUE_STATUS.PAUSED)
         {
           logger.Log(
             globalConfig.LogTypes.info,
             globalConfig.LogLocations.all,
-            `The Queue [${this.queue._id.toString()}] stopped by user [${this.userProps.credit.userId}]`
+            `Kuyruk [${this.queue._id.toString()}] kullanıcı tarafından durduruldu. [${this.userProps.credit.userId}]`
           );
           closeSocket(this.socket, parentPort);
           this.queueCompletedState = QUEUE_STATUS.PAUSED
@@ -199,7 +198,7 @@ class MessageController {
       logger.Log(
         globalConfig.LogTypes.info,
         globalConfig.LogLocations.all,
-        `Message sent to [${item._id.toString()}] by [${settings.userId}]`
+        `Bu müşteriye [${item._id.toString()}] mesaj gönderildi. [${settings.userId}]`
       );
       const mergedData = mergeUpsertUpdateData(this.automationUpserts, this.automationUpdates)
       await this.AnalysisReceiverDataAndSave(mergedData, item)        
@@ -216,7 +215,7 @@ class MessageController {
     logger.Log(
       globalConfig.LogTypes.info,
       globalConfig.LogLocations.all,
-      `The Queue has been completed. 
+      `Mesaj gönderim işlemi bu kuyruk için başarıyla yapıldı. 
       | USER [${this.queue.userId}] 
       | QUEUE [${this.queue._id.toString()}] | SESSION [${this.userProps.session}]`
     );
@@ -378,14 +377,14 @@ class MessageController {
       logger.Log(
         globalConfig.LogTypes.error,
         globalConfig.LogLocations.all,
-        `NO HISTYORY DATA | WARNING | CUSTOMER NO INTERNET CONNECTION`
+        `GEÇMİŞ DATASI BULUNMUYOR | UYARI | MÜŞTERİNİN INTERNET BAĞLANTISI YOK.`
       );
     }
     logger.Log(
       globalConfig.LogTypes.info,
       globalConfig.LogLocations.consoleAndFile,
-      `Proccessing data for receiver info |
-        User => ${this.queue.userId} | Queue => ${this.queue._id.toString()} | current customer => ${queueItem._id.toString()}`
+      `Müşteri bilgileri için veri işleniyor. |
+        Kullanıcı => ${this.queue.userId} | Kuyruk => ${this.queue._id.toString()} | o andaki müşteri => ${queueItem._id.toString()}`
     );
     this.spendCountPerItem = (this.spendCountPerItem !== spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem
     queueItem.spendCredit = (spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem;
@@ -402,7 +401,7 @@ class MessageController {
     logger.Log(
       globalConfig.LogTypes.info,
       globalConfig.LogLocations.all,
-      `Credit Transaction created. | SPENT | ${this.queue.userId}`
+      `Kredi hareket işlemi gerçekleştirildi. | ${this.queue.userId}`
     );
   }
     

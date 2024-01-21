@@ -14,7 +14,7 @@ const runScript = async () => {
     if (isMainThread) {
       logger.Log(globalConfig.LogTypes.info,
         globalConfig.LogLocations.consoleAndFile,
-        "Service Started for searching active queue");
+        "Servis aktif kuyrukları aramaya başladı.");
       
       const currentDate = new Date();
       const currentHour = currentDate.getHours();
@@ -45,18 +45,18 @@ const runScript = async () => {
         logger.Log(
           globalConfig.LogTypes.info,
           globalConfig.LogLocations.consoleAndFile,
-          `There is no queue for this Date => [${currentDate}]`
+          `Bu zaman diliminde aktif kuyruk bulunmuyor. => [${currentDate}]`
         );
       }
     }
   } catch (error) {
     console.log(error);
-    logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.all, "Database Connection Error [CRITICAL]", error);
+    logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.all, "Veri tabanı bağlantı hatası. [CRITICAL]", error);
   }
 }
 process.on('SIGINT', async() => {
   await mongoose.connection.close(false);
-  logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.console, 'Database connection has been closed.');
+  logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.console, 'Veri tabanı bağlatısı kapatıldı.');
   process.exit(0);
 });
 mongoose.connect(globalConfig.mongo_url).then(async(result) => {
@@ -64,7 +64,7 @@ mongoose.connect(globalConfig.mongo_url).then(async(result) => {
     globalConfig.LogTypes.info,
     globalConfig.LogLocations.consoleAndFile,
 
-    `Connected To the Database`
+    `Veri tabanına bağlandı.`
   );
 }).then();
 schedule.scheduleJob("*/1 * * * *", async function() {
