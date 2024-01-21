@@ -194,21 +194,18 @@ class MessageController {
           break;
         }
       }
-      const customer = await customerModel.findById(item.customerId);
-      if (customer) {
-        const currentReceiver = `${customer.phone}${this.baseIdName}`;
-        await this.SendDataToReceiver(currentReceiver)
-        logger.Log(
-          globalConfig.LogTypes.info,
-          globalConfig.LogLocations.all,
-          `Message sent to [${customer._id.toString()}] by [${settings.userId}]`
-        );
-        const mergedData = mergeUpsertUpdateData(this.automationUpserts, this.automationUpdates)
-        await this.AnalysisReceiverDataAndSave(mergedData, customer, item)        
-        this.automationUpdates = []
-        this.automationUpserts = []
-        this.counter++;
-      }
+      const currentReceiver = `${item.phone}${this.baseIdName}`;
+      await this.SendDataToReceiver(item,currentReceiver)
+      logger.Log(
+        globalConfig.LogTypes.info,
+        globalConfig.LogLocations.all,
+        `Message sent to [${item._id.toString()}] by [${settings.userId}]`
+      );
+      const mergedData = mergeUpsertUpdateData(this.automationUpserts, this.automationUpdates)
+      await this.AnalysisReceiverDataAndSave(mergedData, item)        
+      this.automationUpdates = []
+      this.automationUpserts = []
+      this.counter++;
     }
     this.queueCompletedState = this.queueCompletedState === QUEUE_STATUS.IN_PROGRESS ? QUEUE_STATUS.COMPLETED : this.queueCompletedState
     this.queue.status = this.queueCompletedState;
@@ -227,12 +224,22 @@ class MessageController {
       closeSocket(this.socket, parentPort)
   }
   
-  async SendDataToReceiver(currentReceiver){
+  async SendDataToReceiver(queueItem, currentReceiver){
+    let message = this.queue.queueMessage
+    if (queueItem.name !== "" && message.includes("[isim]"))
+      message = message.replace("[isim]", queueItem.name)
+    if (queueItem.info1 !=="" && message.includes("[bilgi1]"))
+      message = message.replace("[bilgi1]", queueItem.info1)
+    if (queueItem.info2 !=="" && message.includes("[bilgi2]"))
+      message = message.replace("[bilgi2]", queueItem.info2)
+    if (queueItem.info3 !== "" && message.includes("[bilgi3]"))
+      message = message.replace("[bilgi3]", queueItem.info3)
+
     switch(this.strategy)
     {
       case MESSAGE_STRATEGY.JUST_TEXT: //OK 1 credit
       {
-        await sendMessage(this.socket, currentReceiver, this.queue.queueMessage)
+        await sendMessage(this.socket, currentReceiver, message)
         break;
       }
       case MESSAGE_STRATEGY.JUST_FILE: // OK 1 credit
@@ -265,7 +272,7 @@ class MessageController {
       }
       case MESSAGE_STRATEGY.MULTIPLE_FILE_MESSAGE:
       {
-        await sendMessage(this.socket, currentReceiver, this.queue.queueMessage)
+        await sendMessage(this.socket, currentReceiver, message)
         this.files.map(async(file) => {
           const extension = getFileType(file)
           const file_type = isMedia(extension)
@@ -288,12 +295,12 @@ class MessageController {
         }${this.queue._id.toString()}/${this.files[0]}`;
         if(file_type === FILE_TYPE.FILE)
         {
-          await sendMessage(this.socket, currentReceiver, this.queue.queueMessage)
+          await sendMessage(this.socket, currentReceiver, message)
           await sendFile(this.socket, currentReceiver, fullFilePath, extension)
         }
         else
         {
-          await sendMediaAndContentMessage(this.socket, currentReceiver, fullFilePath, extension, this.queue.queueMessage)
+          await sendMediaAndContentMessage(this.socket, currentReceiver, fullFilePath, extension, message)
         }
         break;
       }
@@ -309,7 +316,7 @@ class MessageController {
     }, delaySeconds * 1000);
   }
 
-  async AnalysisReceiverDataAndSave(mergedData, currentCustomer, queueItem){
+  async AnalysisReceiverDataAndSave(mergedData, queueItem){
     // toplanan mesajlarin icinde zaten remoteJid , fromMe degeleri bulunuyor 
     // gonderilen mesajlarin status degelerine bakilarak eger gonderim islemi var ise
     // kredi ayarlamasi yapiliyor olacak o queueItem icin kredi harcamasi girilecek
@@ -325,7 +332,7 @@ class MessageController {
         console.log(JSON.stringify(mergedItem, undefined, 2))
         if (mergedItem)
         {
-          if(mergedItem.remoteJid === `${currentCustomer.phone}${this.baseIdName}`)
+          if(mergedItem.remoteJid === `${queueItem.phone}${this.baseIdName}`)
           {
             let info = {
               sent_at: undefined,
@@ -378,7 +385,7 @@ class MessageController {
       globalConfig.LogTypes.info,
       globalConfig.LogLocations.consoleAndFile,
       `Proccessing data for receiver info |
-        User => ${this.queue.userId} | Queue => ${this.queue._id.toString()} | current customer => ${currentCustomer._id.toString()}`
+        User => ${this.queue.userId} | Queue => ${this.queue._id.toString()} | current customer => ${queueItem._id.toString()}`
     );
     this.spendCountPerItem = (this.spendCountPerItem !== spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem
     queueItem.spendCredit = (spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem;

@@ -4,14 +4,34 @@ const queueItemSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    customerId: {
+    phone: {
         type: String,
         required: true,
+    },
+    name: {
+        type: String,
+        required: false,
+        default: ""
+    },
+    info1: {
+        type: String,
+        required: false,
+        default: ""
+    },
+    info2: {
+        type: String,
+        required: false,
+        default: ""
+    },
+    info3:{
+        type: String,
+        required: false,
+        default: ""
     },
     spendCredit: {
         type: Number,
         required: false,
-        default: 0,
+        default: false,
     },
     message_status: {
         type: [] || String,
@@ -29,5 +49,6 @@ const queueItemSchema = new mongoose.Schema({
         default: new Date() 
     }
 });
+
 const queueItemModel = mongoose.model('queueitems', queueItemSchema);
 module.exports = {queueItemModel};

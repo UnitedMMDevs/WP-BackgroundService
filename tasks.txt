@@ -19,13 +19,15 @@ YAPILACAKLAR
 	=> upload credit to user OK
 	=> user sessions OK
 	=> credit Chart OK
-	=> online users
+	=> online users OK BAGLANDI
+	=> see logs OK
 	
+	
+	
+	=> queue islemlerini tamamla oncelikli
 	
 	=> activities
-	=> see logs
-	=> database import export
-	
+	=> configuration adi altinda default extranumbercount, kvkk metin
 	
 
 - activities entegre edilecek
