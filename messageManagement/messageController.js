@@ -349,20 +349,20 @@ class MessageController {
             if(mergedItem.status === MESSAGE_STATUS.ERROR)
             {
               spendCount += 0;
-              info.status = "Not Sent"
+              info.status = "Gönderilemedi."
             }
             else {
               spendCount += 1
               if (mergedItem.status === MESSAGE_STATUS.DELIVERY_ACK)
-                info.status = "Sent"
+                info.status = "İletildi."
               else if(mergedItem.status === MESSAGE_STATUS.PENDING)
-                info.status = "Pending"
+                info.status = "Bekliyor."
               else if(mergedItem.status === MESSAGE_STATUS.PLAYED)
-                info.status = "Played"
+                info.status = "İzlendi."
               else if(mergedItem.status === MESSAGE_STATUS.READ)
-                info.status = "Read"
+                info.status = "Okundu"
               else if(mergedItem.status === MESSAGE_STATUS.SERVER_ACK)
-                info.status = "Sent"
+                info.status = "İletildi."
             }
             extendedMessagesForCustomers.push(info)
           }
@@ -377,7 +377,7 @@ class MessageController {
       spendCount += 1
       extendedMessagesForCustomers.push({
         sent_at: new Date(),
-        status: "Delivered",
+        status: "Gönderildi.",
         message: ""
       })
       logger.Log(
