@@ -10,7 +10,7 @@ const generateSocketOptions = (state) => {
   const socketOpt ={
     printQRInTerminal: false,
     auth: state,
-    defaultQueryTimeoutMs: 1000,
+    defaultQueryTimeoutMs: undefined,
     receivedPendingNotifications: false,
     markOnlineOnConnect: true,
     syncFullHistory: false,

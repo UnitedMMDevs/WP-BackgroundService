@@ -19,7 +19,8 @@ const {
 const { 
   getRandomDelay, 
   defineStatusCheckDelay, 
-  getFileType, 
+  getFileType,
+  deleteFolderRecursive, 
 } = require("../Utils/utilties");
 const { 
   seperateDataFromUpdate, 
@@ -212,14 +213,19 @@ class MessageController {
       {_id: this.queue._id.toString()},
         {$set:this.queue}
     );
-    logger.Log(
-      globalConfig.LogTypes.info,
-      globalConfig.LogLocations.all,
-      `Mesaj gönderim işlemi bu kuyruk için başarıyla yapıldı. 
-      | USER [${this.queue.userId}] 
-      | QUEUE [${this.queue._id.toString()}] | SESSION [${this.userProps.session}]`
-    );
-    if(this.queueCompletedState === QUEUE_STATUS.COMPLETED)
+    if (this.queue.status === QUEUE_STATUS.COMPLETED)
+    {
+      deleteFolderRecursive(`${globalConfig.baseRootPath()}${this.queue._id.toString()}`)
+      logger.Log(
+        globalConfig.LogTypes.info,
+        globalConfig.LogLocations.all,
+        `Mesaj gönderim işlemi bu kuyruk için başarıyla tamamlandi. 
+        | USER [${this.queue.userId}] 
+        | QUEUE [${this.queue._id.toString()}] | SESSION [${this.userProps.session}]`
+      );
+    }
+    
+    if(this.queueCompletedState !== QUEUE_STATUS.IN_PROGRESS)
       closeSocket(this.socket, parentPort)
   }
   
@@ -271,7 +277,6 @@ class MessageController {
       }
       case MESSAGE_STRATEGY.MULTIPLE_FILE_MESSAGE:
       {
-        await sendMessage(this.socket, currentReceiver, message)
         this.files.map(async(file) => {
           const extension = getFileType(file)
           const file_type = isMedia(extension)
@@ -284,6 +289,7 @@ class MessageController {
             await sendFile(this.socket, currentReceiver, fullFilePath, extension)
           }  
         })
+        await sendMessage(this.socket, currentReceiver, message)
         break;
       }
       case MESSAGE_STRATEGY.ONE_FILE_MESSAGE:

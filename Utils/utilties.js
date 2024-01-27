@@ -29,7 +29,19 @@ const defineStatusCheckDelay = (totalItemCount) =>
         return 20;
     }
 }
-
+const deleteFolderRecursive = (directoryPath) => {
+    if (fs.existsSync(directoryPath)) {
+      fs.readdirSync(directoryPath).forEach((file) => {
+        const curPath = path.join(directoryPath, file);
+        if (fs.lstatSync(curPath).isDirectory()) {
+          deleteFolderRecursive(curPath);
+        } else {
+          fs.unlinkSync(curPath);
+        }
+      });
+      fs.rmdirSync(directoryPath);
+    }
+}
 const getFileType = (file_name) => {
     const extension = path.extname(file_name).toLowerCase();
     return extension;
@@ -38,4 +50,5 @@ module.exports =  {
     getRandomDelay, 
     defineStatusCheckDelay,  
     getFileType, 
+    deleteFolderRecursive,
 }; 
