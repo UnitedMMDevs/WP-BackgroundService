@@ -215,7 +215,7 @@ class MessageController {
     );
     if (this.queue.status === QUEUE_STATUS.COMPLETED)
     {
-      deleteFolderRecursive(`${globalConfig.baseRootPath()}${this.queue._id.toString()}`)
+      deleteFolderRecursive(`${globalConfig.baseRootPath}${this.queue._id.toString()}`)
       logger.Log(
         globalConfig.LogTypes.info,
         globalConfig.LogLocations.all,
@@ -249,10 +249,10 @@ class MessageController {
       }
       case MESSAGE_STRATEGY.JUST_FILE: // OK 1 credit
       {
-       const extension = getFileType(this.files[0])
+       const extension = getFileType(this.files[0].name)
        const file_type = isMedia(extension)
        const fullFilePath = `${globalConfig.baseRootPath
-       }${this.queue._id.toString()}/${this.files[0]}`;
+       }${this.queue._id.toString()}/${this.files[0].name}`;
        if(file_type === FILE_TYPE.MEDIA)
         await sendMedia(this.socket, currentReceiver, fullFilePath, extension)
        else {
@@ -263,10 +263,10 @@ class MessageController {
       case MESSAGE_STRATEGY.MULTIPLE_FILE:
       {
         this.files.map(async(file) => {
-          const extension = getFileType(file)
+          const extension = getFileType(file.name)
           const file_type = isMedia(extension)
           const fullFilePath = `${globalConfig.baseRootPath
-          }${this.queue._id.toString()}/${file}`;
+          }${this.queue._id.toString()}/${file.name}`;
           if(file_type === FILE_TYPE.MEDIA)
            await sendMedia(this.socket, currentReceiver, fullFilePath, extension)
           else{
@@ -278,10 +278,10 @@ class MessageController {
       case MESSAGE_STRATEGY.MULTIPLE_FILE_MESSAGE:
       {
         this.files.map(async(file) => {
-          const extension = getFileType(file)
+          const extension = getFileType(file.name)
           const file_type = isMedia(extension)
           const fullFilePath = `${globalConfig.baseRootPath
-          }${this.queue._id.toString()}/${file}`;
+          }${this.queue._id.toString()}/${file.name}`;
           if(file_type === FILE_TYPE.MEDIA)
            await sendMedia(this.socket, currentReceiver, fullFilePath, extension)
           else {
@@ -294,10 +294,10 @@ class MessageController {
       }
       case MESSAGE_STRATEGY.ONE_FILE_MESSAGE:
       {
-        const extension = getFileType(this.files[0])
+        const extension = getFileType(this.files[0].name)
         const file_type = isMedia(extension)
         const fullFilePath = `${globalConfig.baseRootPath
-        }${this.queue._id.toString()}/${this.files[0]}`;
+        }${this.queue._id.toString()}/${this.files[0].name}`;
         if(file_type === FILE_TYPE.FILE)
         {
           await sendMessage(this.socket, currentReceiver, message)

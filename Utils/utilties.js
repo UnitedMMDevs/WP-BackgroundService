@@ -1,7 +1,7 @@
 const path = require('path');
 const { globalConfig } = require('./config');
 const { FILE_TYPE } = require('./wp-utilities');
-
+const fs = require("fs")
 const getRandomDelay = (min, max) => {
     return Math.random() * (max - min) + min;
 }

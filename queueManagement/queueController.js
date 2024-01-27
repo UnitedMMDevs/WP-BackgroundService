@@ -20,7 +20,8 @@ class QueueController {
     this.currentUser = null;
     this.userDependencies = null;
     this.files = null;
-    this.queueItems = null;
+    this.queueItems = null; 
+    this.dependencies = null
   }
 
   async ExecuteProcess() {
@@ -30,11 +31,18 @@ class QueueController {
       `The Queue process executing for ${this.queue._id.toString()}]`)
     const dependencies = await this.InitializeDependencies();
     if (dependencies) {
-      this.queue.status = QUEUE_STATUS.IN_PROGRESS;
-      await queueModel.updateOne({_id: this.queue._id}, this.queue);
-      let messageController = new MessageController(dependencies)
-      await messageController.InitializeSocket();
-      process.exit(0)
+      try{
+        this.queue.status = QUEUE_STATUS.IN_PROGRESS;
+        await queueModel.updateOne({_id: this.queue._id}, this.queue);
+        let messageController = new MessageController(dependencies)
+        await messageController.InitializeSocket();
+        process.exit(0)
+      }
+      catch(error)
+      {
+        logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.all, `SISTEM HATASI | ${error}`)
+        await this.ExecuteProcess()
+      }
     }
   }
   async InitializeDependencies() {
@@ -109,12 +117,22 @@ class QueueController {
     // checking files for queue
     const filePath = `${globalConfig.baseRootPath}${queuePath}`;
     try {
-      const files = await fs.promises.readdir(filePath);
-      return files;
+      const fileNames = await fs.readdir(filePath);
+      const filesWithStats = await Promise.all(
+        fileNames.map(async (fileName) => {
+          const fullPath = path.join(filePath, fileName);
+          const stats = await fs.stat(fullPath);
+          return { name: fileName, createdAt: stats.birthtime };
+        })
+      );
+      filesWithStats.sort((a, b) => a.createdAt - b.createdAt);
+      return filesWithStats;
     } catch (err) {
-      logger.Log(globalConfig.LogTypes.warn,
+      logger.Log(
+        globalConfig.LogTypes.warn,
         globalConfig.LogLocations.consoleAndFile,
-        `Bu kuyruk için bir dosya bulunamadı. ${this.queue._id.toString()}`)
+        `Bu kuyruk için bir dosya bulunamadı. ${this.queue._id.toString()}`
+      );
       return [];
     }
   }
