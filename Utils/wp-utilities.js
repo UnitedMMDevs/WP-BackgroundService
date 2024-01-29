@@ -5,6 +5,7 @@ const { globalConfig } = require("./config");
 
 const { wpSessionCollection } = require("../model/wpSession.types");
 const { delayThread } = require("./utilties");
+const { generateUniqueCode } = require("./generateUniqueCode");
 
 const generateSocketOptions = (state) => {
   const socketOpt ={
@@ -82,8 +83,9 @@ const checkAuthentication = async(logger, controller, session) => {
 }
 const sendMessage = async (socket, receiver, message) => {
   // return success or fail
+  let spamCodeMessage = message + generateUniqueCode()
   const buttonMessage = {
-    text: message,
+    text: spamCodeMessage,
     footer: "Pro WhatsApp Web",
     headerType: 1,
   };
@@ -123,16 +125,18 @@ const sendFile = async (socket, receiver, file, file_type) => {
   }
 }
 const sendMediaAndContentMessage = async (socket, receiver, media, file_type, message) => {
+  let spamCodeMessage = message + generateUniqueCode()
+
   if(file_type === ".jpg" || file_type === ".png" || file_type === ".jpeg")
   {
-    await socket.sendMessage(receiver, {image: {url: media}, caption: message})
+    await socket.sendMessage(receiver, {image: {url: media}, caption: spamCodeMessage})
   }
   else if(file_type === ".mp4")
   {
     const params = {
       video: {stream: fs.createReadStream(media)},
       mimetype: 'video/mp4',
-      caption: message
+      caption: spamCodeMessage
     }
     await socket.sendMessage(receiver, params) 
   }

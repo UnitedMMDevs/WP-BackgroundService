@@ -7,6 +7,7 @@ const { wpSessionCollection } = require("../model/wpSession.types")
 const { automationSettingsModel } = require("../model/autoMationSettings.types")
 const { default: mongoose } = require("mongoose");
 const fs = require("fs");
+const path = require("path")
 const { logger } = require('../Utils/logger');
 const { MessageController } = require("../messageManagement/messageController");
 const { QUEUE_STATUS, queueModel } = require("../model/queue.types");
@@ -114,20 +115,23 @@ class QueueController {
   }
 
   async getFiles(queuePath) {
-    // checking files for queue
     const filePath = `${globalConfig.baseRootPath}${queuePath}`;
     try {
-      const fileNames = await fs.readdir(filePath);
+      // 'fs.promises.readdir' kullanarak Promise tabanlı yaklaşım
+      const fileNames = await fs.promises.readdir(filePath);
       const filesWithStats = await Promise.all(
         fileNames.map(async (fileName) => {
           const fullPath = path.join(filePath, fileName);
-          const stats = await fs.stat(fullPath);
+          // 'fs.promises.stat' kullanarak Promise tabanlı yaklaşım
+          const stats = await fs.promises.stat(fullPath);
           return { name: fileName, createdAt: stats.birthtime };
         })
       );
       filesWithStats.sort((a, b) => a.createdAt - b.createdAt);
+      console.log(filesWithStats);
       return filesWithStats;
     } catch (err) {
+      console.log(err);
       logger.Log(
         globalConfig.LogTypes.warn,
         globalConfig.LogLocations.consoleAndFile,

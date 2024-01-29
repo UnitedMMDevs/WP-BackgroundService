@@ -322,12 +322,6 @@ class MessageController {
   }
 
   async AnalysisReceiverDataAndSave(mergedData, queueItem){
-    // toplanan mesajlarin icinde zaten remoteJid , fromMe degeleri bulunuyor 
-    // gonderilen mesajlarin status degelerine bakilarak eger gonderim islemi var ise
-    // kredi ayarlamasi yapiliyor olacak o queueItem icin kredi harcamasi girilecek
-    // queueItem message_status u girilecek
-    // creditTransaction girisi yapilacak
-    // user dan kredi dusulmesi yapilacak
     
     let spendCount = 0;
     let extendedMessagesForCustomers = []
