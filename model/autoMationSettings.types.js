@@ -31,6 +31,11 @@ const automationSettingsSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
+    useSpamCode: {
+        type: Boolean,
+        required: false,
+        default: false
+    },
     createdAt: {
         type: Date,
         required: false,

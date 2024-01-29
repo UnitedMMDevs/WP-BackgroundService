@@ -39,6 +39,7 @@ const { creditTransactionModel } = require("../model/creditTransaction.types");
 const { userModel } = require("../model/user.types");
 const { creditsModel } = require("../model/credits.types");
 const { default: mongoose } = require("mongoose");
+const { generateUniqueCode } = require("../Utils/generateUniqueCode");
 class MessageController {
   constructor({
     queue,
@@ -240,6 +241,11 @@ class MessageController {
     if (queueItem.info3 !== "" && message.includes("[bilgi3]"))
       message = message.replace("[bilgi3]", queueItem.info3)
 
+    const settings = this.userProps.settings;
+    if ((settings.useSpamCode !== undefined) && settings.useSpamCode === true)
+    {
+      message = message + generateUniqueCode();
+    }
     switch(this.strategy)
     {
       case MESSAGE_STRATEGY.JUST_TEXT: //OK 1 credit
@@ -310,7 +316,6 @@ class MessageController {
         break;
       }
     }
-    const settings = this.userProps.settings;
     const delaySeconds = getRandomDelay(
       settings.min_message_delay,
       settings.max_message_delay
