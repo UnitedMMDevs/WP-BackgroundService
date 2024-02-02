@@ -15,6 +15,7 @@ const {
   sendFile,
   defineStrategy,
   isMedia,
+  checkReceiverExists,
 } = require('../Utils/wp-utilities');
 const { 
   getRandomDelay, 
@@ -40,6 +41,7 @@ const { userModel } = require("../model/user.types");
 const { creditsModel } = require("../model/credits.types");
 const { default: mongoose } = require("mongoose");
 const { generateUniqueCode } = require("../Utils/generateUniqueCode");
+const { globalAgent } = require("http");
 class MessageController {
   constructor({
     queue,
@@ -196,18 +198,38 @@ class MessageController {
         }
       }
       const currentReceiver = `${item.phone}${this.baseIdName}`;
-      await this.SendDataToReceiver(item,currentReceiver)
-      logger.Log(
-        globalConfig.LogTypes.info,
-        globalConfig.LogLocations.all,
-        `Bu müşteriye [${item._id.toString()}] mesaj gönderildi. [${settings.userId}]`
-      );
-      const mergedData = mergeUpsertUpdateData(this.automationUpserts, this.automationUpdates)
-      await this.AnalysisReceiverDataAndSave(mergedData, item)        
-      this.automationUpdates = []
-      this.automationUpserts = []
-      this.counter++;
-    }
+      if(!await checkReceiverExists(this.socket, currentReceiver))
+      {
+          let extendedMessagesForCustomers = []
+          let info = {
+          sent_at: undefined,
+          status: undefined,
+          message: undefined,
+        }
+        info.sent_at = new Date()
+        info.message = ""
+        info.status = "Böyle bir kullanıcı bulunamadı."
+        extendedMessagesForCustomers.push(info);
+        item.spendCredit = 0;
+        item.message_status = extendedMessagesForCustomers
+        await queueItemModel.updateOne({_id: new mongoose.Types.ObjectId(item._id)}, {$set: item})
+        logger.Log(globalConfig.LogTypes.warn, globalConfig.LogLocations.all, "Boyle bir whatsapp hesabi bulunamadi.");
+      }
+      else {
+          await this.SendDataToReceiver(item,currentReceiver)
+          logger.Log(
+            globalConfig.LogTypes.info,
+            globalConfig.LogLocations.all,
+            `Bu müşteriye [${item._id.toString()}] mesaj gönderildi. [${settings.userId}]`
+          );
+          const mergedData = mergeUpsertUpdateData(this.automationUpserts, this.automationUpdates)
+          await this.AnalysisReceiverDataAndSave(mergedData, item)        
+          this.automationUpdates = []
+          this.automationUpserts = []
+          this.counter++;
+        }
+      }
+      
     this.queueCompletedState = this.queueCompletedState === QUEUE_STATUS.IN_PROGRESS ? QUEUE_STATUS.COMPLETED : this.queueCompletedState
     this.queue.status = this.queueCompletedState;
     await queueModel.updateOne(
@@ -246,84 +268,84 @@ class MessageController {
     {
       message = message + generateUniqueCode();
     }
-    switch(this.strategy)
-    {
-      case MESSAGE_STRATEGY.JUST_TEXT: //OK 1 credit
+      switch(this.strategy)
       {
-        await sendMessage(this.socket, currentReceiver, message)
-        break;
-      }
-      case MESSAGE_STRATEGY.JUST_FILE: // OK 1 credit
-      {
-       const extension = getFileType(this.files[0].name)
-       const file_type = isMedia(extension)
-       const fullFilePath = `${globalConfig.baseRootPath
-       }${this.queue._id.toString()}/${this.files[0].name}`;
-       if(file_type === FILE_TYPE.MEDIA)
-        await sendMedia(this.socket, currentReceiver, fullFilePath, extension)
-       else {
-        await sendFile(this.socket, currentReceiver, fullFilePath, extension)
-       }
-       break;
-      }
-      case MESSAGE_STRATEGY.MULTIPLE_FILE:
-      {
-        this.files.map(async(file) => {
-          const extension = getFileType(file.name)
-          const file_type = isMedia(extension)
-          const fullFilePath = `${globalConfig.baseRootPath
-          }${this.queue._id.toString()}/${file.name}`;
-          if(file_type === FILE_TYPE.MEDIA)
-           await sendMedia(this.socket, currentReceiver, fullFilePath, extension)
-          else{
-            await sendFile(this.socket, currentReceiver, fullFilePath, extension)
-          }
-        })
-        break;
-      }
-      case MESSAGE_STRATEGY.MULTIPLE_FILE_MESSAGE:
-      {
-        this.files.map(async(file) => {
-          const extension = getFileType(file.name)
-          const file_type = isMedia(extension)
-          const fullFilePath = `${globalConfig.baseRootPath
-          }${this.queue._id.toString()}/${file.name}`;
-          if(file_type === FILE_TYPE.MEDIA)
-           await sendMedia(this.socket, currentReceiver, fullFilePath, extension)
-          else {
-           
-            await sendFile(this.socket, currentReceiver, fullFilePath, extension)
-          }  
-        })
-        await sendMessage(this.socket, currentReceiver, message)
-        break;
-      }
-      case MESSAGE_STRATEGY.ONE_FILE_MESSAGE:
-      {
+        case MESSAGE_STRATEGY.JUST_TEXT: //OK 1 credit
+        {
+          await sendMessage(this.socket, currentReceiver, message)
+          break;
+        }
+        case MESSAGE_STRATEGY.JUST_FILE: // OK 1 credit
+        {
         const extension = getFileType(this.files[0].name)
         const file_type = isMedia(extension)
         const fullFilePath = `${globalConfig.baseRootPath
         }${this.queue._id.toString()}/${this.files[0].name}`;
-        if(file_type === FILE_TYPE.FILE)
-        {
-          await sendMessage(this.socket, currentReceiver, message)
+        if(file_type === FILE_TYPE.MEDIA)
+          await sendMedia(this.socket, currentReceiver, fullFilePath, extension)
+        else {
           await sendFile(this.socket, currentReceiver, fullFilePath, extension)
         }
-        else
-        {
-          await sendMediaAndContentMessage(this.socket, currentReceiver, fullFilePath, extension, message)
-        }
         break;
+        }
+        case MESSAGE_STRATEGY.MULTIPLE_FILE:
+        {
+          this.files.map(async(file) => {
+            const extension = getFileType(file.name)
+            const file_type = isMedia(extension)
+            const fullFilePath = `${globalConfig.baseRootPath
+            }${this.queue._id.toString()}/${file.name}`;
+            if(file_type === FILE_TYPE.MEDIA)
+            await sendMedia(this.socket, currentReceiver, fullFilePath, extension)
+            else{
+              await sendFile(this.socket, currentReceiver, fullFilePath, extension)
+            }
+          })
+          break;
+        }
+        case MESSAGE_STRATEGY.MULTIPLE_FILE_MESSAGE:
+        {
+          this.files.map(async(file) => {
+            const extension = getFileType(file.name)
+            const file_type = isMedia(extension)
+            const fullFilePath = `${globalConfig.baseRootPath
+            }${this.queue._id.toString()}/${file.name}`;
+            if(file_type === FILE_TYPE.MEDIA)
+            await sendMedia(this.socket, currentReceiver, fullFilePath, extension)
+            else {
+            
+              await sendFile(this.socket, currentReceiver, fullFilePath, extension)
+            }  
+          })
+          await sendMessage(this.socket, currentReceiver, message)
+          break;
+        }
+        case MESSAGE_STRATEGY.ONE_FILE_MESSAGE:
+        {
+          const extension = getFileType(this.files[0].name)
+          const file_type = isMedia(extension)
+          const fullFilePath = `${globalConfig.baseRootPath
+          }${this.queue._id.toString()}/${this.files[0].name}`;
+          if(file_type === FILE_TYPE.FILE)
+          {
+            await sendMessage(this.socket, currentReceiver, message)
+            await sendFile(this.socket, currentReceiver, fullFilePath, extension)
+          }
+          else
+          {
+            await sendMediaAndContentMessage(this.socket, currentReceiver, fullFilePath, extension, message)
+          }
+          break;
+        }
       }
-    }
-    const delaySeconds = getRandomDelay(
-      settings.min_message_delay,
-      settings.max_message_delay
-    );
-    await delay(delaySeconds * 1000)
-    setTimeout(() => {
-      
-    }, delaySeconds * 1000);
+      const delaySeconds = getRandomDelay(
+        settings.min_message_delay,
+        settings.max_message_delay
+      );
+      await delay(delaySeconds * 1000)
+      setTimeout(() => {
+        
+      }, delaySeconds * 1000);
   }
 
   async AnalysisReceiverDataAndSave(mergedData, queueItem){

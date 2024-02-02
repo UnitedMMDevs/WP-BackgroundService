@@ -145,7 +145,12 @@ const closeSocket = (socket, parentPort) => {
   socket.end(undefined);
   parentPort.postMessage('terminate');
 }
+const checkReceiverExists = async(socket, receiver)=>{
 
+  const [result] = await socket.onWhatsApp(receiver);
+  if(result?.exists) return true;
+  return false;
+}
 module.exports = {
   MESSAGE_STATUS,
   FILE_TYPE,
@@ -158,7 +163,8 @@ module.exports = {
   defineStrategy, 
   checkAuthentication,
   sendFile,
-  isMedia
+  isMedia,
+  checkReceiverExists,
 }
 
 

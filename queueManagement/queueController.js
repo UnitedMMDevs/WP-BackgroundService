@@ -117,19 +117,23 @@ class QueueController {
   async getFiles(queuePath) {
     const filePath = `${globalConfig.baseRootPath}${queuePath}`;
     try {
-      // 'fs.promises.readdir' kullanarak Promise tabanlı yaklaşım
-      const fileNames = await fs.promises.readdir(filePath);
-      const filesWithStats = await Promise.all(
-        fileNames.map(async (fileName) => {
-          const fullPath = path.join(filePath, fileName);
-          // 'fs.promises.stat' kullanarak Promise tabanlı yaklaşım
-          const stats = await fs.promises.stat(fullPath);
-          return { name: fileName, createdAt: stats.birthtime };
-        })
-      );
-      filesWithStats.sort((a, b) => a.createdAt - b.createdAt);
-      console.log(filesWithStats);
-      return filesWithStats;
+      if(fs.existsSync(filePath))
+      {
+          // 'fs.promises.readdir' kullanarak Promise tabanlı yaklaşım
+        const fileNames = await fs.promises.readdir(filePath);
+        const filesWithStats = await Promise.all(
+          fileNames.map(async (fileName) => {
+            const fullPath = path.join(filePath, fileName);
+            // 'fs.promises.stat' kullanarak Promise tabanlı yaklaşım
+            const stats = await fs.promises.stat(fullPath);
+            return { name: fileName, createdAt: stats.birthtime };
+          })
+        );
+        filesWithStats.sort((a, b) => a.createdAt - b.createdAt);
+        console.log(filesWithStats);
+        return filesWithStats;
+      }
+      else return [];
     } catch (err) {
       console.log(err);
       logger.Log(
