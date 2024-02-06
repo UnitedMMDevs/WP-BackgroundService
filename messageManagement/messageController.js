@@ -182,21 +182,19 @@ class MessageController {
         break;
       }
       
-      if (this.counter % this.checkStatusPerItem === 0)
+      const currentState = await queueModel.findById(this.queue._id.toString());
+      if (currentState.status === QUEUE_STATUS.PAUSED)
       {
-        const currentState = await queueModel.findById(this.queue._id.toString());
-        if (currentState.status === QUEUE_STATUS.PAUSED)
-        {
-          logger.Log(
-            globalConfig.LogTypes.info,
-            globalConfig.LogLocations.all,
-            `Kuyruk [${this.queue._id.toString()}] kullanıcı tarafından durduruldu. [${this.userProps.credit.userId}]`
-          );
-          closeSocket(this.socket, parentPort);
-          this.queueCompletedState = QUEUE_STATUS.PAUSED
-          break;
-        }
+        logger.Log(
+          globalConfig.LogTypes.info,
+          globalConfig.LogLocations.all,
+          `Kuyruk [${this.queue._id.toString()}] kullanıcı tarafından durduruldu. [${this.userProps.credit.userId}]`
+        );
+        closeSocket(this.socket, parentPort);
+        this.queueCompletedState = QUEUE_STATUS.PAUSED
+        break;
       }
+      
       const currentReceiver = `${item.phone}${this.baseIdName}`;
       if(!await checkReceiverExists(this.socket, currentReceiver))
       {
@@ -208,7 +206,7 @@ class MessageController {
         }
         info.sent_at = new Date()
         info.message = ""
-        info.status = "Böyle bir kullanıcı bulunamadı."
+        info.status = "Böyle bir kullanıcı bulunamadı.(Başarısız)"
         extendedMessagesForCustomers.push(info);
         item.spendCredit = 0;
         item.message_status = extendedMessagesForCustomers
@@ -370,20 +368,20 @@ class MessageController {
             if(mergedItem.status === MESSAGE_STATUS.ERROR)
             {
               spendCount += 0;
-              info.status = "Gönderilemedi."
+              info.status = "Gönderilemedi. (Başarısız)"
             }
             else {
               spendCount += 1
               if (mergedItem.status === MESSAGE_STATUS.DELIVERY_ACK)
-                info.status = "İletildi."
+                info.status = "İletildi. (Başarılı)"
               else if(mergedItem.status === MESSAGE_STATUS.PENDING)
-                info.status = "Bekliyor."
+                info.status = "Bekliyor.(Başarılı)"
               else if(mergedItem.status === MESSAGE_STATUS.PLAYED)
-                info.status = "İzlendi."
+                info.status = "İzlendi. (Başarılı)"
               else if(mergedItem.status === MESSAGE_STATUS.READ)
-                info.status = "Okundu"
+                info.status = "Okundu. (Başarılı)"
               else if(mergedItem.status === MESSAGE_STATUS.SERVER_ACK)
-                info.status = "İletildi."
+                info.status = "İletildi. (Başarılı)"
             }
             extendedMessagesForCustomers.push(info)
           }
@@ -398,7 +396,7 @@ class MessageController {
       spendCount += 1
       extendedMessagesForCustomers.push({
         sent_at: new Date(),
-        status: "Gönderildi.",
+        status: "Gönderildi. (Başarılı)",
         message: ""
       })
       logger.Log(
