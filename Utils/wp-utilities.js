@@ -115,6 +115,20 @@ const sendFile = async (socket, receiver, file, file_type) => {
       { audio: { url: file }, mimetype: 'audio/mp4' },
     )
   }
+  else if (file_type === ".ogg")
+  {
+    await socket.sendMessage(
+      receiver, 
+      { audio: { url: file }, mimetype: 'audio/mp4' },
+    )
+  }
+  else if(file_type === ".waptt")
+  {
+    await socket.sendMessage(
+      receiver, 
+      { audio: { url: file }, mimetype: 'audio/mp4' },
+    )
+  }
   else
   {
     await socket.sendMessage(
