@@ -12,7 +12,7 @@ const generateSocketOptions = (state) => {
     printQRInTerminal: false,
     auth: state,
     defaultQueryTimeoutMs: undefined,
-    receivedPendingNotifications: false,
+    receivedPendingNotifications: true,
     markOnlineOnConnect: true,
     syncFullHistory: false,
     keepAliveIntervalMs: 1000,
@@ -81,6 +81,7 @@ const checkAuthentication = async(logger, controller, session) => {
     return null;
   }
 }
+
 const sendMessage = async (socket, receiver, message) => {
   // return success or fail
   const buttonMessage = {

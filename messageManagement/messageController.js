@@ -309,12 +309,12 @@ class MessageController {
             const fullFilePath = `${globalConfig.baseRootPath
             }${this.queue._id.toString()}/${file.name}`;
             if(file_type === FILE_TYPE.MEDIA)
-            await sendMedia(this.socket, currentReceiver, fullFilePath, extension)
+              await sendMedia(this.socket, currentReceiver, fullFilePath, extension)
             else {
-            
               await sendFile(this.socket, currentReceiver, fullFilePath, extension)
-            }  
+            }
           })
+          
           await sendMessage(this.socket, currentReceiver, message)
           break;
         }
@@ -326,8 +326,8 @@ class MessageController {
           }${this.queue._id.toString()}/${this.files[0].name}`;
           if(file_type === FILE_TYPE.FILE)
           {
-            await sendMessage(this.socket, currentReceiver, message)
             await sendFile(this.socket, currentReceiver, fullFilePath, extension)
+            await sendMessage(this.socket, currentReceiver, message)
           }
           else
           {
