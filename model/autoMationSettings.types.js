@@ -36,6 +36,11 @@ const automationSettingsSchema = new mongoose.Schema({
         required: false,
         default: false
     },
+    defaultAreaCode: {
+        type: Number,
+        required: false,
+        default: 90
+    },
     createdAt: {
         type: Date,
         required: false,
