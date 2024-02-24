@@ -1,4 +1,4 @@
-const { initAuthCreds } = require("@whiskeysockets/baileys");
+const { initAuthCreds, proto } = require("@whiskeysockets/baileys");
 const { default: mongoose } = require("mongoose");
 const BufferJSON = {
     replacer: (k, value) => {
