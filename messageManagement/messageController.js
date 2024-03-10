@@ -87,7 +87,7 @@ class MessageController {
         const {connection, lastDisconnect} = events["connection.update"]
         const status = lastDisconnect?.error?.output?.statusCode
         if (connection === 'close'){
-            if (status !== 403 && status === 401 && !status){
+            if (status !== 403 && status !== 401) {
               this.InitializeSocket()
               logger.Log(globalConfig.LogTypes.info,
                 globalConfig.LogLocations.consoleAndFile,

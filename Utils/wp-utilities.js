@@ -16,6 +16,7 @@ const generateSocketOptions = (state) => {
     markOnlineOnConnect: true,
     syncFullHistory: false,
     keepAliveIntervalMs: 1000,
+    connectTimeoutMs: 15000,
     browser: Browsers.ubuntu("Desktop"),
   }
   return socketOpt;
