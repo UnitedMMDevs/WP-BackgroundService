@@ -84,10 +84,11 @@ class MessageController {
     this.socket.ev.process(async(events) => {
       if (events["connection.update"])
       {
+        /// possible error 
         const {connection, lastDisconnect} = events["connection.update"]
         const status = lastDisconnect?.error?.output?.statusCode
         if (connection === 'close'){
-            if (status !== 403 && status !== 401) {
+            if (!status || (status !== 403 && status !== 401)) {
               this.InitializeSocket()
               logger.Log(globalConfig.LogTypes.info,
                 globalConfig.LogLocations.consoleAndFile,
