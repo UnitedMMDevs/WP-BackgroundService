@@ -1,3 +1,13 @@
+/***********************************************************************
+ *  İŞLEV: Logger siniflarinin uretildi dosya
+ *  AÇIKLAMA:
+ *      Bu dosya farkli ortamlarda loglama islemini gerceklestirilen siniflarin
+ *      -   kodlandigi alandir.
+ ***********************************************************************/
+
+//# =============================================================================
+//# Lib imports
+//# =============================================================================
 require('winston-mongodb');
 const winston = require('winston');
 const dailyRotateFile = require('winston-daily-rotate-file');
@@ -5,7 +15,11 @@ const path = require('path');
 const fs = require('fs');
 const { globalConfig } = require('./config');
 
-
+/***********************************************************************
+ *  İŞLEV: Console ekranina loglama yapan log servisi
+ *  AÇIKLAMA:
+ *      Console ekranina loglama yapmak icin kullanilan util servisi
+ ***********************************************************************/
 class ConsoleLogger {
     constructor() {
         this.logger = winston.createLogger(
@@ -29,6 +43,13 @@ class ConsoleLogger {
     }
 
 }
+/***********************************************************************
+ *  İŞLEV: Dosyalara loglama yapan log servisi
+ *  AÇIKLAMA:
+ *      Dosyalara loglama yapmak icin kullanilan util servisi
+ *      -   Gun sinirlamasi ayarlanip belirli bir sureden sonra kendi kendine
+ *      -   olusturulmus dosyalari silen mekanizma ile kodlanmistir.
+ ***********************************************************************/
 class FileLogger {
     
     constructor() {
@@ -61,6 +82,11 @@ class FileLogger {
         this.logger.log(level, message);
     }
 }
+/***********************************************************************
+ *  İŞLEV: Veri tabanina loglama yapan servis
+ *  AÇIKLAMA:
+ *      Veri tabanina loglama yapmak icin kullanilan util servisi
+ ***********************************************************************/
 class DbLogger {
     constructor() {
         this.logger = winston.createLogger(
@@ -82,7 +108,9 @@ class DbLogger {
     }
 }
 
-
+/***********************************************************************
+ *  İŞLEV: Butun loggerlari bir arada tutup ihtiyaca gore log ortamini ayarlayan servis
+ ***********************************************************************/
 class LoggerService {
     constructor(
         fileLogger, 
@@ -93,7 +121,14 @@ class LoggerService {
         this.dbLogger = dbLogger;
     }
 
-
+     /**********************************************
+     * Fonksiyon: Log
+     * Açıklama: Belirtilen log leveli ve lokasyona gore
+     *  -   ortamlarinin tercihlerinin yapildigi ve 
+     *  -   loglama isleminin yapildigi fonksiyondur
+     * Girdi(ler): type, location, message
+     * Çıktı: NULL
+     **********************************************/
     Log(type, location, message) {
         switch (location) {
             case 'ALL':

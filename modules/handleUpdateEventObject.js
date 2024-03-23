@@ -1,3 +1,22 @@
+/***********************************************************************
+ *  İŞLEV: Bu js dosyasi kuyruk islemleri mesaj gecmisi olusturmak icin yardimci fonksiyon sunar. 
+ *  AÇIKLAMA:
+ *      Kuyruk islemleri sirasinda whatsapp uzerinden yakalanan bilgilendirme datalarini islemek ve 
+ *      - kuyruk icin gecmis datasi olusturabilmek icin olusturulmus yardimci fonksiyonlari barindirir.
+ ***********************************************************************/
+
+
+
+ /**********************************************
+ * Fonksiyon: seperateDataFromUpdate
+ * Açıklama: Whatsapp update eventi sonrasinda mesaj gonderim bildirimini yakalar ve icerisinden 
+ *  -  gonderen kisinin bilgisini
+ *  -  bildirim idsini
+ *  -  kullanicinin kendisinin gonderim yapip yapmadiginin bilgisini
+ *  -  gonderim durumunu iceriden alir.
+ * Girdi(ler): update data
+ * Çıktı: []
+ **********************************************/
 const seperateDataFromUpdate = (update) => {
     let seperatedArray = []
     update.forEach((obj) => {
@@ -14,6 +33,16 @@ const seperateDataFromUpdate = (update) => {
     return seperatedArray;
 }
 
+ /**********************************************
+ * Fonksiyon: seperateDataFromUpsert
+ * Açıklama: Whatsapp update eventi sonrasinda mesaj gonderim bildirimini yakalar ve icerisinden 
+ *  -  gonderen kisinin bilgisini
+ *  -  gonderilen mesaj icerigini
+ *  -  mesaj id sini
+ *  -  gonderim zamanini alir.
+ * Girdi(ler): update data
+ * Çıktı: []
+ **********************************************/
 const seperateDataFromUpsert = (upsert) => {
     let seperatedArray = [];
     const message = upsert.messages[0];
@@ -29,6 +58,15 @@ const seperateDataFromUpsert = (upsert) => {
     }
     return seperatedArray;
 };
+
+ /**********************************************
+ * Fonksiyon: mergeUpsertUpdateData
+ * Açıklama: update ve upsert islemlerinden elde edilen dizileri id bilgilerine gore eslestirip 
+ *  -  kuyruk olusturan kisiye gecmis datasinin gosterilebilmesi icin
+ *  -  data yigini olusturur
+ * Girdi(ler): updateData, upsertData
+ * Çıktı: []
+ **********************************************/
 const mergeUpsertUpdateData = (upsertData, updateData) => {
     let mergedData = [];
     upsertData.forEach((upsertItem) => {

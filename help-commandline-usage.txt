@@ -1,0 +1,33 @@
+// dosyalarin veya class larin genel yapilan islemlerini not almak icin kullanilmasi gereken aciklama satiri
+// sayfalarin basinda kullanilacak
+/***********************************************************************
+ *  İŞLEV: Fonksiyonun Yaptığı İş
+ *  AÇIKLAMA:
+ *      Bu fonksiyon şu işlemleri gerçekleştirir...
+ *      - İlk adımı açıklar
+ *      - İkinci adımı açıklar
+ *      ...
+ *  
+ *  PARAMETRELER:
+ *      - param1 (Tip): Parametre açıklaması
+ *      - param2 (Tip): Parametre açıklaması
+ *  
+ *  DÖNÜŞ TİPİ:
+ *      - Fonksiyonun dönüş tipi ve ne anlama geldiği
+ ***********************************************************************/
+
+ ================================================================================
+ // fonksiyonlarin baslarinda yer alacak
+ // her fonksiyonun yaptigi islev eklenmeli
+
+ /**********************************************
+ * Fonksiyon: fetchData
+ * Açıklama: API'den veri çeker ve JSON olarak döndürür.
+ * Girdi(ler): URL (string)
+ * Çıktı: JSON Object
+ **********************************************/
+ ================================================================================
+ // kod bloklari icinde onemli yerleri belirtmek icin kullanilmasi gereken kod bloklari
+# =============================================================================
+# Veri İşleme Fonksiyonları
+# =============================================================================

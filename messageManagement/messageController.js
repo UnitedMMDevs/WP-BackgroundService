@@ -1,6 +1,16 @@
+/***********************************************************************
+ *  İŞLEV: Mesaj gonderim islemini yapan servis
+ *  AÇIKLAMA:
+ *      Bu kod dosyasinda her bir kullaniciya mesaj gonderen ve gonderim esnasinda
+ *   -  veya daha sonrasi gecmis datalari cekip butun gonderim surecini yoneten 
+ *    -  siniftir.
+ ***********************************************************************/
+
+//# =============================================================================
+//# Lib imports
+//# =============================================================================
 const fs = require("fs");
 const { makeWASocket, delay } = require("@whiskeysockets/baileys");
-
 const {
   closeSocket, 
   sendMedia, 
@@ -69,26 +79,56 @@ class MessageController {
     this.counter = 0
     this.spendCountPerItem = 0
   }
+  /**********************************************
+  * Fonksiyon: CheckConnectionSuccess
+  * Açıklama: Baglantinin kurulup kurulmadini kontrol eden
+  * fonksiyon
+  * Girdi(ler): NULL
+  * Çıktı: BOOLEAN
+  **********************************************/
   async CheckConnectionSuccess(){
     return this.isConnected
   }
+
+  /**********************************************
+  * Fonksiyon: InitializeSocket
+  * Açıklama: Gerekli ayarlamalari yaparak
+  *   - whatsaapp baglantisi icin socket olusturma islemi
+  *   - yapan yardimci fonksiyon
+  * Girdi(ler): NULL
+  * Çıktı: BOOLEAN
+  **********************************************/
   async InitializeSocket() {
     logger.Log(globalConfig.LogTypes.info,
       globalConfig.LogLocations.consoleAndFile,
       `Servis aktif kuyruk için socket oluşturma aşamasında.`
     )
+    //# =============================================================================
+    //# Generating authentication configs 
+    //# =============================================================================
     this.authConfig = await checkAuthentication(logger, this.controller, this.userProps.session);
+    //# =============================================================================
+    //# if authentication not exists than return
+    //# =============================================================================
     if (!this.authConfig.state && !this.authConfig.saveCreds) return;
+    //# =============================================================================
+    //# Generate socket options and create instance of the socket
+    //# =============================================================================
     const socketOptions = generateSocketOptions(this.authConfig.state)
     this.socket = makeWASocket(socketOptions)
     this.socket.ev.process(async(events) => {
       if (events["connection.update"])
       {
-        /// possible error 
+        //# =============================================================================
+        //# Observing connection update event
+        //# ============================================================================= 
         const {connection, lastDisconnect} = events["connection.update"]
         const status = lastDisconnect?.error?.output?.statusCode
         if (connection === 'close'){
             if (!status || (status !== 403 && status !== 401)) {
+              //# =============================================================================
+              //# If user have session but couldn't connect correctly than try it again.
+              //# ============================================================================= 
               this.InitializeSocket()
               logger.Log(globalConfig.LogTypes.info,
                 globalConfig.LogLocations.consoleAndFile,
@@ -97,6 +137,9 @@ class MessageController {
             }
         }
         else if (connection === 'open'){
+            //# =============================================================================
+            //# If wp connection has been completed. Save new creds
+            //# ============================================================================= 
           logger.Log(globalConfig.LogTypes.info,
             globalConfig.LogLocations.consoleAndFile,
             `Servis kullanıcının whatsapp oturumuna [${this.userProps.credit.userId.toString()}] başarılı şekilde bağlandı.`
@@ -108,10 +151,17 @@ class MessageController {
 
       if(events['creds.update'])
       {
+        //# =============================================================================
+        //# Observing creds.update event. When triggered and change session data than save 
+        //# it correct one.
+        //# ============================================================================= 
         await this.authConfig.saveCreds()
       }
       if (events['messages.update'])
       {
+        //# =============================================================================
+        //# Observing messages.update
+        //# ============================================================================= 
         const data = events['messages.update']
         logger.Log(globalConfig.LogTypes.info,
           globalConfig.LogLocations.console,
@@ -119,10 +169,19 @@ class MessageController {
           )
           if (data)
           {
+            //# =============================================================================
+            //# Check any updates
+            //# ============================================================================= 
             console.log(JSON.stringify(data))
+            //# =============================================================================
+            //# Seperate Which service needs from general update data
+            //# ============================================================================= 
             const seperatedData = seperateDataFromUpdate(data)
             const uniqueSeperatedData = seperatedData.filter((item) => 
             {
+              //# =============================================================================
+              //# Check the array includes same data. If they not add to array.
+              //# =============================================================================
               return !this.automationUpdates.some((targetItem) => ((targetItem.remoteJid === item.remoteJid) && (targetItem.id === item.id)))
             })
             this.automationUpdates.push(...uniqueSeperatedData);
@@ -130,6 +189,9 @@ class MessageController {
       }
       if (events['messages.upsert'])
       {
+        //# =============================================================================
+        //# Observing messages.upsert
+        //# ============================================================================= 
         logger.Log(globalConfig.LogTypes.info,
           globalConfig.LogLocations.console,
           `Servis bildirimleri kuyruk için toplama işlemi yapıyor. | Kuyruk => [${this.queue._id.toString()}]`
@@ -137,20 +199,32 @@ class MessageController {
         const data = events['messages.upsert']
         if (data)
         {
+          //# =============================================================================
+          //# Seperate Which service needs from general upsert data
+          //# ============================================================================= 
           console.log(JSON.stringify(data))
           const seperatedData = seperateDataFromUpsert(data)
           const uniqueSeperatedData = seperatedData.filter((item) => 
           {
+            //# =============================================================================
+            //# Check the array includes same data. If they not add to array.
+            //# =============================================================================
             return !this.automationUpserts.some((targetItem) => ((targetItem.remoteJid === item.remoteJid) && (targetItem.id === item.id)))
           })
           this.automationUpserts.push(...uniqueSeperatedData);
         } 
       }
     })
+    //# =============================================================================
+    //# Delay before connection succeed
+    //# =============================================================================
     await delay(4 * 1000) // sockete bekleme sureso
     setTimeout(() => {
       
     }, 4 * 1000); // bu process bekleme suresi
+    //# =============================================================================
+    //# Checking connection 
+    //# =============================================================================
     if(this.CheckConnectionSuccess())
       await this.ExecuteAutomation()
     else
@@ -159,11 +233,20 @@ class MessageController {
         `Kullanıcı whatsapp bağlantı hatası. | ${this.queue.userId.toString()} , Oturum : [${this.userProps.session}]`
       )
   }
-  
+  /**********************************************
+  * Fonksiyon: ExecuteAutomation
+  * Açıklama: Otomasyonu baslatan ve mesaj gonderimi
+  *   - yapan temel fonksyion
+  * Girdi(ler): NULL
+  * Çıktı: NULL
+  **********************************************/
   async ExecuteAutomation(){
     const settings = this.userProps.settings;
     await delay(2 * 1000)
     for (const item of this.queueItems) {
+      //# =============================================================================
+      //# Check time interval from user automation settings. 
+      //# =============================================================================
       const currentDate = new Date()
       let currentHour = currentDate.getHours()
       let currentMinute = currentDate.getMinutes()
@@ -173,6 +256,9 @@ class MessageController {
       (currentHour === settings.end_Hour && currentMinute <= settings.end_Minute));
       if (!condition)
       {
+        //# =============================================================================
+        //# If proccess out of the time interval. Than make queue status to PAUSED. 
+        //# =============================================================================
         logger.Log(
           globalConfig.LogTypes.info,
           globalConfig.LogLocations.all,
@@ -186,17 +272,29 @@ class MessageController {
       const currentState = await queueModel.findById(this.queue._id.toString());
       if (currentState.status === QUEUE_STATUS.PAUSED)
       {
+        //# =============================================================================
+        //# If QUEUE paused by user. Than stop sending message to receivers. 
+        //# =============================================================================
         logger.Log(
           globalConfig.LogTypes.info,
           globalConfig.LogLocations.all,
           `Kuyruk [${this.queue._id.toString()}] kullanıcı tarafından durduruldu. [${this.userProps.credit.userId}]`
         );
+        //# =============================================================================
+        //# Close connection 
+        //# =============================================================================
         closeSocket(this.socket, parentPort);
         this.queueCompletedState = QUEUE_STATUS.PAUSED
         break;
       }
       
+      //# =============================================================================
+      //# Define current recevier 
+      //# =============================================================================
       const currentReceiver = `${item.phone}${this.baseIdName}`;
+      //# =============================================================================
+      //# Check receiver not really exists 
+      //# =============================================================================
       if(!await checkReceiverExists(this.socket, currentReceiver))
       {
           let extendedMessagesForCustomers = []
@@ -215,6 +313,9 @@ class MessageController {
         logger.Log(globalConfig.LogTypes.warn, globalConfig.LogLocations.all, "Boyle bir whatsapp hesabi bulunamadi.");
       }
       else {
+          //# =============================================================================
+          //# Send data to receiver 
+          //# =============================================================================
           await this.SendDataToReceiver(item,currentReceiver)
           logger.Log(
             globalConfig.LogTypes.info,
@@ -228,7 +329,9 @@ class MessageController {
           this.counter++;
         }
       }
-      
+    //# =============================================================================
+    //# Complete the queue 
+    //# =============================================================================
     this.queueCompletedState = this.queueCompletedState === QUEUE_STATUS.IN_PROGRESS ? QUEUE_STATUS.COMPLETED : this.queueCompletedState
     this.queue.status = this.queueCompletedState;
     await queueModel.updateOne(
@@ -246,12 +349,23 @@ class MessageController {
         | QUEUE [${this.queue._id.toString()}] | SESSION [${this.userProps.session}]`
       );
     }
-    
+    //# =============================================================================
+    //# Close connection after completed 
+    //# =============================================================================
     if(this.queueCompletedState !== QUEUE_STATUS.IN_PROGRESS)
       closeSocket(this.socket, parentPort)
   }
-  
+  /**********************************************
+  * Fonksiyon: SendDataToReceiver
+  * Açıklama: Kullaniciya mesaj gonderme islemini
+  * yapan ana fonksyion
+  * Girdi(ler): queueItem, currentReceiver
+  * Çıktı: NULL
+  **********************************************/
   async SendDataToReceiver(queueItem, currentReceiver){
+    //# =============================================================================
+    //# Setting dynamic data from queueMessage 
+    //# =============================================================================
     let message = this.queue.queueMessage
     if (queueItem.name !== "" && message.includes("[isim]"))
       message = message.replace("[isim]", queueItem.name)
@@ -263,19 +377,31 @@ class MessageController {
       message = message.replace("[bilgi3]", queueItem.info3)
 
     const settings = this.userProps.settings;
+    //# =============================================================================
+    //# Check user wants to use spam code or not 
+    //# =============================================================================
     if ((settings.useSpamCode !== undefined) && settings.useSpamCode === true)
     {
       message = message + generateUniqueCode();
     }
+      //# =============================================================================
+      //# Defining strategy and run proccess for this strategy 
+      //# =============================================================================
       switch(this.strategy)
       {
         case MESSAGE_STRATEGY.JUST_TEXT: //OK 1 credit
         {
+          //# =============================================================================
+          //# Send single message 
+          //# =============================================================================
           await sendMessage(this.socket, currentReceiver, message)
           break;
         }
         case MESSAGE_STRATEGY.JUST_FILE: // OK 1 credit
         {
+        //# =============================================================================
+        //# Send single file 
+        //# =============================================================================
         const extension = getFileType(this.files[0].name)
         const file_type = isMedia(extension)
         const fullFilePath = `${globalConfig.baseRootPath
@@ -289,6 +415,9 @@ class MessageController {
         }
         case MESSAGE_STRATEGY.MULTIPLE_FILE:
         {
+          //# =============================================================================
+          //# Send multiple file 
+          //# =============================================================================
           this.files.map(async(file) => {
             const extension = getFileType(file.name)
             const file_type = isMedia(extension)
@@ -304,6 +433,9 @@ class MessageController {
         }
         case MESSAGE_STRATEGY.MULTIPLE_FILE_MESSAGE:
         {
+          //# =============================================================================
+          //# Send multiple file and message  
+          //# =============================================================================
           this.files.map(async(file) => {
             const extension = getFileType(file.name)
             const file_type = isMedia(extension)
@@ -321,6 +453,9 @@ class MessageController {
         }
         case MESSAGE_STRATEGY.ONE_FILE_MESSAGE:
         {
+          //# =============================================================================
+          //# Send single file and single message 
+          //# =============================================================================
           const extension = getFileType(this.files[0].name)
           const file_type = isMedia(extension)
           const fullFilePath = `${globalConfig.baseRootPath
@@ -337,6 +472,9 @@ class MessageController {
           break;
         }
       }
+      //# =============================================================================
+      //# Delay before sending next receiver 
+      //# =============================================================================
       const delaySeconds = getRandomDelay(
         settings.min_message_delay,
         settings.max_message_delay
@@ -346,7 +484,14 @@ class MessageController {
         
       }, delaySeconds * 1000);
   }
-
+  /**********************************************
+  * Fonksiyon: AnalysisReceiverDataAndSave
+  * Açıklama: Gecmis datasi ve gonderimden sonra
+  *   -  kredi guncelleme islemlerinin yapilmasi icin analiz
+  *   -   fonksiyonu
+  * Girdi(ler): mergedData, queueItem
+  * Çıktı: NULL
+  **********************************************/
   async AnalysisReceiverDataAndSave(mergedData, queueItem){
     
     let spendCount = 0;
@@ -366,6 +511,9 @@ class MessageController {
             }
             info.sent_at = new Date(mergedItem.sendAt.low * 1000)
             info.message = Object.keys(mergedItem.message)[0]
+            //# =============================================================================
+            //# Defining send status by mergedItem 
+            //# =============================================================================
             if(mergedItem.status === MESSAGE_STATUS.ERROR)
             {
               spendCount += 0;
@@ -394,6 +542,9 @@ class MessageController {
     }
     else
     {
+      //# =============================================================================
+      //# Setting history data 
+      //# =============================================================================
       spendCount += 1
       extendedMessagesForCustomers.push({
         sent_at: new Date(),
@@ -412,11 +563,17 @@ class MessageController {
       `Müşteri bilgileri için veri işleniyor. |
         Kullanıcı => ${this.queue.userId} | Kuyruk => ${this.queue._id.toString()} | o andaki müşteri => ${queueItem._id.toString()}`
     );
+    //# =============================================================================
+    //# Update queueItem for history data and update spend credit amount 
+    //# =============================================================================
     this.spendCountPerItem = (this.spendCountPerItem !== spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem
     queueItem.spendCredit = (spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem;
     queueItem.message_status = extendedMessagesForCustomers
     await queueItemModel.updateOne({_id: new mongoose.Types.ObjectId(queueItem._id)}, {$set: queueItem})
     this.userProps.credit.totalAmount -= spendCount
+    //# =============================================================================
+    //# Decerease credit from user and set new transaction as spent type 
+    //# =============================================================================
     await creditsModel.updateOne({_id:  new mongoose.Types.ObjectId(this.userProps.credit._id)}, {$set: this.userProps.credit})
     await creditTransactionModel.create({
       user_id: this.userProps.credit.userId.toString(),
