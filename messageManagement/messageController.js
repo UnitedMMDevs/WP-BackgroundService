@@ -305,7 +305,35 @@ class MessageController {
         this.queueCompletedState = QUEUE_STATUS.PAUSED
         break;
       }
-      
+      //# =============================================================================
+      //# Check the current receiver blacklisted or graylisted!!! 
+      //# =============================================================================
+      const checkGrayOrBlackListed = await customerModel.findOne({phone: item.phone, 
+        $or: [
+          {registeredBlackList: true},
+          {registeredGrayList: true}
+        ]
+      })
+      if (checkGrayOrBlackListed)
+      {
+        let extendedMessagesForCustomers = []
+          let info = {
+          sent_at: undefined,
+          status: undefined,
+          message: undefined,
+        }
+        info.sent_at = new Date()
+        info.message = ""
+        info.status = (checkGrayOrBlackListed.registeredBlackList && !checkGrayOrBlackListed.registeredGrayList) 
+          ? "Bu kullanıcı kara listeye alınmıştır.(Mesaj gönderilmedi.)" : "Bu kullanıcı gri listeye dahil edilmiştir.(Mesaj gönderilmedi.)";
+        extendedMessagesForCustomers.push(info);
+        item.spendCredit = 0;
+        item.message_status = extendedMessagesForCustomers
+        await queueItemModel.updateOne({_id: new mongoose.Types.ObjectId(item._id)}, {$set: item})
+        logger.Log(globalConfig.LogTypes.warn, globalConfig.LogLocations.all, (checkGrayOrBlackListed.registeredBlackList && !checkGrayOrBlackListed.registeredGrayList) 
+        ? "Bu kullanıcı kara listeye alınmıştır." : "Bu kullanıcı gri listeye dahil edilmiştir.");
+        continue
+      }
       //# =============================================================================
       //# Define current recevier 
       //# =============================================================================
