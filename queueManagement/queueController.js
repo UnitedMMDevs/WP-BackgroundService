@@ -186,13 +186,13 @@ class QueueController {
     return queueItems;
   }
 
-  /**********************************************
+    /**********************************************
      * Fonksiyon: getFiles
      * Açıklama: Kuyruk olusturma sirasinda eklenen medya dosyalarini sandbox ortamindan kuyruk bilgisine gore getiren yardimci fonksiyon 
      * Girdi(ler): queuePath
      * Çıktı: [{ name: fileName, createdAt: stats.birthtime }]
     **********************************************/
-    async getFiles(queuePath) {
+  async getFiles(queuePath) {
     const filePath = `${globalConfig.baseRootPath}${queuePath}`;
     try {
       //# =============================================================================
