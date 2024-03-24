@@ -265,6 +265,8 @@ parentPort.on("message", async (message) => {
   }
   if (message === 'terminate')
   {
+
+    console.log("terminated")
     process.exit(0);
   }
 });

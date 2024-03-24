@@ -221,7 +221,7 @@ class MessageController {
         )
         const data = events['messages.upsert']
         if (data)
-        {o
+        {
           //# =============================================================================
           //# Seperate Which service needs from general upsert data
           //# ============================================================================= 
