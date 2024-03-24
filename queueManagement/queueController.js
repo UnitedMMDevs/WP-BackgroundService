@@ -85,8 +85,7 @@ class QueueController {
         //# =============================================================================
         //# Catching service errors and if necesssary restart the process.
         //# =============================================================================
-        logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.all, `SISTEM HATASI | ${error}`)
-        await this.ExecuteProcess()
+        logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.all, `SISTEM HATASI | ${error}`)  
       }
     }
   }
@@ -188,12 +187,12 @@ class QueueController {
   }
 
   /**********************************************
-   * Fonksiyon: getFiles
-   * Açıklama: Kuyruk olusturma sirasinda eklenen medya dosyalarini sandbox ortamindan kuyruk bilgisine gore getiren yardimci fonksiyon 
-   * Girdi(ler): queuePath
-   * Çıktı: [{ name: fileName, createdAt: stats.birthtime }]
-  **********************************************/
-  async getFiles(queuePath) {
+     * Fonksiyon: getFiles
+     * Açıklama: Kuyruk olusturma sirasinda eklenen medya dosyalarini sandbox ortamindan kuyruk bilgisine gore getiren yardimci fonksiyon 
+     * Girdi(ler): queuePath
+     * Çıktı: [{ name: fileName, createdAt: stats.birthtime }]
+    **********************************************/
+    async getFiles(queuePath) {
     const filePath = `${globalConfig.baseRootPath}${queuePath}`;
     try {
       //# =============================================================================

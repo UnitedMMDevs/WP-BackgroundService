@@ -38,7 +38,7 @@ const {
   seperateDataFromUpsert, 
   mergeUpsertUpdateData 
 } = require("../modules/handleUpdateEventObject");
-const { queueModel, QUEUE_STATUS } = require("../model/queue.types");
+const { queueModel, QUEUE_STATUS, QUEUE_STATUS_ERROR_CODES } = require("../model/queue.types");
 const events = require("worker/build/main/browser/events");
 const { globalConfig } = require("../Utils/config");
 const wpClient = require("./wpController");
@@ -52,6 +52,8 @@ const { creditsModel } = require("../model/credits.types");
 const { default: mongoose } = require("mongoose");
 const { generateUniqueCode } = require("../Utils/generateUniqueCode");
 const { globalAgent } = require("http");
+const { wpSessionCollection } = require("../model/wpSession.types");
+
 class MessageController {
   constructor({
     queue,
@@ -110,7 +112,11 @@ class MessageController {
     //# =============================================================================
     //# if authentication not exists than return
     //# =============================================================================
-    if (!this.authConfig.state && !this.authConfig.saveCreds) return;
+    if (!this.authConfig.state && !this.authConfig.saveCreds) {
+      logger.Log(globalConfig.LogTypes.warn, globalConfig.LogLocations.all, `No Session Recorded for this account | ${this.userProps.credit.userId}`);
+      return
+    
+    };
     //# =============================================================================
     //# Generate socket options and create instance of the socket
     //# =============================================================================
@@ -124,6 +130,7 @@ class MessageController {
         //# ============================================================================= 
         const {connection, lastDisconnect} = events["connection.update"]
         const status = lastDisconnect?.error?.output?.statusCode
+        console.log("||||||||||||||||||||||| Last disconnect object |||||||||||||||||||||||",JSON.stringify(lastDisconnect, undefined, 2))
         if (connection === 'close'){
             if (!status || (status !== 403 && status !== 401)) {
               //# =============================================================================
@@ -134,6 +141,22 @@ class MessageController {
                 globalConfig.LogLocations.consoleAndFile,
                 `Servis kullanıcının whatsapp oturumuna bağlanmaya çalışıyor. [${this.userProps.credit.userId.toString()}]`
               )
+            }
+            else if (status === 401)
+            {
+              //# =============================================================================
+              //# If user have delete his/her session from whatsapp. You should close the socket.
+              //# =============================================================================
+              logger.Log(globalConfig.LogTypes.warn, globalConfig.LogLocations.all, "Kullanicinin acik bir oturumu bulunmamaktadir.");
+              /**********************************************
+              * TODO: Whatsapp session kaydinin bizim sistemimizden silinmesi.
+              * TODO: Queque durumunu HATA yapma
+              **********************************************/
+              await wpSessionCollection.deleteOne({ _id: this.userProps.session });
+              this.queue.status = `${QUEUE_STATUS.ERROR}|${QUEUE_STATUS_ERROR_CODES.NO_SESSION}`;
+              await queueModel.updateOne({_id: new mongoose.Types.ObjectId(this.queue._id)}, {$set: this.queue})
+              closeSocket(this.socket, parentPort)
+              return;
             }
         }
         else if (connection === 'open'){
@@ -198,7 +221,7 @@ class MessageController {
         )
         const data = events['messages.upsert']
         if (data)
-        {
+        {o
           //# =============================================================================
           //# Seperate Which service needs from general upsert data
           //# ============================================================================= 

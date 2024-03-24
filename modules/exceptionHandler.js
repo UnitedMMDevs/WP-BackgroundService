@@ -1,0 +1,6 @@
+
+
+class WpServiceExceptionHandler extends Error {
+    
+    
+}

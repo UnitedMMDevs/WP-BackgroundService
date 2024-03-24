@@ -1,10 +1,16 @@
 const mongoose = require('mongoose');
 
+const QUEUE_STATUS_ERROR_CODES = {
+    NO_SESSION: "Whatsapp uygulamasinda acik bir oturumunuz bulunmamaktadir.",
+    SERVER_ERROR: "Sunucudan kaynaklanan bir problem sebebiyle hata almistir.",
+    FILE_ERROR: "Kuyruk icin eklenen dosyalarda problem vardir.",
+}
 const QUEUE_STATUS = {
     PENDING:'PENDING',
     IN_PROGRESS: 'IN_PROGRESS',
     COMPLETED: 'COMPLETED',
     PAUSED: 'PAUSED',
+    ERROR: "ERROR"
 }
   
 const queueSchema = new mongoose.Schema({
@@ -45,4 +51,4 @@ const queueSchema = new mongoose.Schema({
 
 });
 const queueModel = mongoose.model('queue', queueSchema);
-module.exports = {queueModel, QUEUE_STATUS}
+module.exports = {queueModel, QUEUE_STATUS, QUEUE_STATUS_ERROR_CODES}
