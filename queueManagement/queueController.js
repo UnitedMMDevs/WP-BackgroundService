@@ -161,7 +161,6 @@ class QueueController {
     const settings = await automationSettingsModel.findOne({
       userId: userId,
     });
-
     return {
       credit: credit,
       settings: settings,

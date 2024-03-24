@@ -148,10 +148,6 @@ class MessageController {
               //# If user have delete his/her session from whatsapp. You should close the socket.
               //# =============================================================================
               logger.Log(globalConfig.LogTypes.warn, globalConfig.LogLocations.all, "Kullanicinin acik bir oturumu bulunmamaktadir.");
-              /**********************************************
-              * TODO: Whatsapp session kaydinin bizim sistemimizden silinmesi.
-              * TODO: Queque durumunu HATA yapma
-              **********************************************/
               await wpSessionCollection.deleteOne({ _id: this.userProps.session });
               this.queue.status = `${QUEUE_STATUS.ERROR}|${QUEUE_STATUS_ERROR_CODES.NO_SESSION}`;
               await queueModel.updateOne({_id: new mongoose.Types.ObjectId(this.queue._id)}, {$set: this.queue})
@@ -225,7 +221,6 @@ class MessageController {
           //# =============================================================================
           //# Seperate Which service needs from general upsert data
           //# ============================================================================= 
-          console.log(JSON.stringify(data))
           const seperatedData = seperateDataFromUpsert(data)
           const uniqueSeperatedData = seperatedData.filter((item) => 
           {
