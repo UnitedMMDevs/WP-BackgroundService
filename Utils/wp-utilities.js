@@ -282,7 +282,7 @@ const sendMediaAndContentMessage = async (socket, receiver, media, file_type, me
  **********************************************/
 const closeSocket = (socket, parentPort) => {
   socket.end(undefined);
-  parentPort.postMessage('terminate');
+  parentPort.postMessage("terminate");
 }
  /**********************************************
  * Fonksiyon: checkReceiverExists

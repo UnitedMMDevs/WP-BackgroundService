@@ -31,12 +31,15 @@ const {
   getRandomDelay, 
   defineStatusCheckDelay, 
   getFileType,
-  deleteFolderRecursive, 
+  deleteFolderRecursive,
+  generateTextMessageForWP, 
 } = require("../Utils/utilties");
 const { 
   seperateDataFromUpdate, 
   seperateDataFromUpsert, 
-  mergeUpsertUpdateData 
+  mergeUpsertUpdateData, 
+  generateExtendedMessages,
+  defineStatusAndInfoFromHistoryData
 } = require("../modules/handleUpdateEventObject");
 const { queueModel, QUEUE_STATUS, QUEUE_STATUS_ERROR_CODES } = require("../model/queue.types");
 const events = require("worker/build/main/browser/events");
@@ -53,6 +56,7 @@ const { default: mongoose } = require("mongoose");
 const { generateUniqueCode } = require("../Utils/generateUniqueCode");
 const { globalAgent } = require("http");
 const { wpSessionCollection } = require("../model/wpSession.types");
+const { RuleChecker } = require("../modules/ruleChecker");
 
 class MessageController {
   constructor({
@@ -67,7 +71,6 @@ class MessageController {
     this.files = files;
     this.queueItems = queueItems;
     this.checkStatusPerItem = defineStatusCheckDelay(this.queueItems.length);
-    console.log('check per item value', this.checkStatusPerItem)
     this.baseIdName = "@s.whatsapp.net";
     this.isConnected = false;
     this.automationUpdates = []
@@ -130,7 +133,6 @@ class MessageController {
         //# ============================================================================= 
         const {connection, lastDisconnect} = events["connection.update"]
         const status = lastDisconnect?.error?.output?.statusCode
-        console.log("||||||||||||||||||||||| Last disconnect object |||||||||||||||||||||||",JSON.stringify(lastDisconnect, undefined, 2))
         if (connection === 'close'){
             if (!status || (status !== 403 && status !== 401)) {
               //# =============================================================================
@@ -191,7 +193,6 @@ class MessageController {
             //# =============================================================================
             //# Check any updates
             //# ============================================================================= 
-            console.log(JSON.stringify(data))
             //# =============================================================================
             //# Seperate Which service needs from general update data
             //# ============================================================================= 
@@ -262,17 +263,7 @@ class MessageController {
     const settings = this.userProps.settings;
     await delay(2 * 1000)
     for (const item of this.queueItems) {
-      //# =============================================================================
-      //# Check time interval from user automation settings. 
-      //# =============================================================================
-      const currentDate = new Date()
-      let currentHour = currentDate.getHours()
-      let currentMinute = currentDate.getMinutes()
-
-      const condition = ((currentHour > settings.start_Hour && currentHour < settings.end_Hour) ||
-      (currentHour === settings.start_Hour && currentMinute >= settings.start_Minute) ||
-      (currentHour === settings.end_Hour && currentMinute <= settings.end_Minute));
-      if (!condition)
+      if (!RuleChecker.checkTimeIntervalForUser(settings))
       {
         //# =============================================================================
         //# If proccess out of the time interval. Than make queue status to PAUSED. 
@@ -286,13 +277,8 @@ class MessageController {
         closeSocket(this.socket, parentPort);
         break;
       }
-      
-      const currentState = await queueModel.findById(this.queue._id.toString());
-      if (currentState.status === QUEUE_STATUS.PAUSED)
+      if (await RuleChecker.checkQueuePausedByUser(this.queue, queueModel))
       {
-        //# =============================================================================
-        //# If QUEUE paused by user. Than stop sending message to receivers. 
-        //# =============================================================================
         logger.Log(
           globalConfig.LogTypes.info,
           globalConfig.LogLocations.all,
@@ -305,76 +291,53 @@ class MessageController {
         this.queueCompletedState = QUEUE_STATUS.PAUSED
         break;
       }
-      //# =============================================================================
-      //# Check the current receiver blacklisted or graylisted!!! 
-      //# =============================================================================
-      const checkGrayOrBlackListed = await customerModel.findOne({phone: item.phone, 
-        $or: [
-          {registeredBlackList: true},
-          {registeredGrayList: true}
-        ]
-      })
-      if (checkGrayOrBlackListed)
+      if (await RuleChecker.checkUserBlacklistedOrGrayListed(item, customerModel))
       {
+        //# =============================================================================
+        //# Pass the blacklisted or graylisted user. 
+        //# =============================================================================
         let extendedMessagesForCustomers = []
-          let info = {
-          sent_at: undefined,
-          status: undefined,
-          message: undefined,
-        }
-        info.sent_at = new Date()
-        info.message = ""
-        info.status = (checkGrayOrBlackListed.registeredBlackList && !checkGrayOrBlackListed.registeredGrayList) 
-          ? "Bu kullanıcı kara listeye alınmıştır.(Mesaj gönderilmedi.)" : "Bu kullanıcı gri listeye dahil edilmiştir.(Mesaj gönderilmedi.)";
-        extendedMessagesForCustomers.push(info);
+        extendedMessagesForCustomers = generateExtendedMessages(extendedMessagesForCustomers, new Date(), "", (checkGrayOrBlackListed.registeredBlackList && !checkGrayOrBlackListed.registeredGrayList) 
+        ? "Bu kullanıcı kara listeye alınmıştır.(Mesaj gönderilmedi.)" : "Bu kullanıcı gri listeye dahil edilmiştir.(Mesaj gönderilmedi.)")
         item.spendCredit = 0;
         item.message_status = extendedMessagesForCustomers
         await queueItemModel.updateOne({_id: new mongoose.Types.ObjectId(item._id)}, {$set: item})
         logger.Log(globalConfig.LogTypes.warn, globalConfig.LogLocations.all, (checkGrayOrBlackListed.registeredBlackList && !checkGrayOrBlackListed.registeredGrayList) 
         ? "Bu kullanıcı kara listeye alınmıştır." : "Bu kullanıcı gri listeye dahil edilmiştir.");
-        continue
+        continue;
       }
       //# =============================================================================
       //# Define current recevier 
       //# =============================================================================
       const currentReceiver = `${item.phone}${this.baseIdName}`;
-      //# =============================================================================
-      //# Check receiver not really exists 
-      //# =============================================================================
-      if(!await checkReceiverExists(this.socket, currentReceiver))
+      if (!await RuleChecker.checkWpAccountExists(this.socket, currentReceiver))
       {
-          let extendedMessagesForCustomers = []
-          let info = {
-          sent_at: undefined,
-          status: undefined,
-          message: undefined,
-        }
-        info.sent_at = new Date()
-        info.message = ""
-        info.status = "Böyle bir kullanıcı bulunamadı.(Başarısız)"
-        extendedMessagesForCustomers.push(info);
+        //# =============================================================================
+        //# Pass the wp user if doesnt exists. 
+        //# =============================================================================
+        let extendedMessagesForCustomers = []
+        extendedMessagesForCustomers = generateExtendedMessages(extendedMessagesForCustomers, new Date(), "", "Böyle bir kullanıcı bulunamadı.(Başarısız)");
         item.spendCredit = 0;
         item.message_status = extendedMessagesForCustomers
         await queueItemModel.updateOne({_id: new mongoose.Types.ObjectId(item._id)}, {$set: item})
         logger.Log(globalConfig.LogTypes.warn, globalConfig.LogLocations.all, "Boyle bir whatsapp hesabi bulunamadi.");
+        continue
       }
-      else {
-          //# =============================================================================
-          //# Send data to receiver 
-          //# =============================================================================
-          await this.SendDataToReceiver(item,currentReceiver)
-          logger.Log(
-            globalConfig.LogTypes.info,
-            globalConfig.LogLocations.all,
-            `Bu müşteriye [${item._id.toString()}] mesaj gönderildi. [${settings.userId}]`
-          );
-          const mergedData = mergeUpsertUpdateData(this.automationUpserts, this.automationUpdates)
-          await this.AnalysisReceiverDataAndSave(mergedData, item)        
-          this.automationUpdates = []
-          this.automationUpserts = []
-          this.counter++;
-        }
-      }
+      //# =============================================================================
+      //# Send data to receiver 
+      //# =============================================================================
+      await this.SendDataToReceiver(item,currentReceiver)
+      logger.Log(
+        globalConfig.LogTypes.info,
+        globalConfig.LogLocations.all,
+        `Bu müşteriye [${item._id.toString()}] mesaj gönderildi. [${settings.userId}]`
+      );
+      const mergedData = mergeUpsertUpdateData(this.automationUpserts, this.automationUpdates)
+      await this.AnalysisReceiverDataAndSave(mergedData, item)        
+      this.automationUpdates = []
+      this.automationUpserts = []
+      this.counter++;
+    }
     //# =============================================================================
     //# Complete the queue 
     //# =============================================================================
@@ -409,24 +372,9 @@ class MessageController {
   * Çıktı: NULL
   **********************************************/
   async SendDataToReceiver(queueItem, currentReceiver){
-    //# =============================================================================
-    //# Setting dynamic data from queueMessage 
-    //# =============================================================================
-    let message = this.queue.queueMessage
-    if (queueItem.name !== "" && message.includes("[isim]"))
-      message = message.replace("[isim]", queueItem.name)
-    if (queueItem.info1 !=="" && message.includes("[bilgi1]"))
-      message = message.replace("[bilgi1]", queueItem.info1)
-    if (queueItem.info2 !=="" && message.includes("[bilgi2]"))
-      message = message.replace("[bilgi2]", queueItem.info2)
-    if (queueItem.info3 !== "" && message.includes("[bilgi3]"))
-      message = message.replace("[bilgi3]", queueItem.info3)
-
+    let message = generateTextMessageForWP(queueItem, this.queue.queueMessage)
     const settings = this.userProps.settings;
-    //# =============================================================================
-    //# Check user wants to use spam code or not 
-    //# =============================================================================
-    if ((settings.useSpamCode !== undefined) && settings.useSpamCode === true)
+    if (RuleChecker.checkeSpamCodeSettings(settings))
     {
       message = message + generateUniqueCode();
     }
@@ -520,15 +468,11 @@ class MessageController {
       }
       //# =============================================================================
       //# Delay before sending next receiver 
-      //# =============================================================================
-      const delaySeconds = getRandomDelay(
-        settings.min_message_delay,
-        settings.max_message_delay
-      );
+      //# ============================================================================= 
+      const delaySeconds = getRandomDelay(settings.min_message_delay, settings.max_message_delay) 
       await delay(delaySeconds * 1000)
       setTimeout(() => {
-        
-      }, delaySeconds * 1000);
+      },  delaySeconds * 1000);
   }
   /**********************************************
   * Fonksiyon: AnalysisReceiverDataAndSave
@@ -545,63 +489,37 @@ class MessageController {
     if (mergedData && mergedData.length > 0)
     {
       mergedData.map((mergedItem) => {
-        console.log(JSON.stringify(mergedItem, undefined, 2))
         if (mergedItem)
         {
           if(mergedItem.remoteJid === `${queueItem.phone}${this.baseIdName}`)
           {
-            let info = {
-              sent_at: undefined,
-              status: undefined,
-              message: undefined,
-            }
-            info.sent_at = new Date(mergedItem.sendAt.low * 1000)
-            info.message = Object.keys(mergedItem.message)[0]
             //# =============================================================================
             //# Defining send status by mergedItem 
             //# =============================================================================
-            if(mergedItem.status === MESSAGE_STATUS.ERROR)
-            {
-              spendCount += 0;
-              info.status = "Gönderilemedi. (Başarısız)"
-            }
-            else {
-              spendCount += 1
-              if (mergedItem.status === MESSAGE_STATUS.DELIVERY_ACK)
-                info.status = "İletildi. (Başarılı)"
-              else if(mergedItem.status === MESSAGE_STATUS.PENDING)
-                info.status = "Bekliyor.(Başarılı)"
-              else if(mergedItem.status === MESSAGE_STATUS.PLAYED)
-                info.status = "İzlendi. (Başarılı)"
-              else if(mergedItem.status === MESSAGE_STATUS.READ)
-                info.status = "Okundu. (Başarılı)"
-              else if(mergedItem.status === MESSAGE_STATUS.SERVER_ACK)
-                info.status = "İletildi. (Başarılı)"
-            }
-            extendedMessagesForCustomers.push(info)
+            let historyResult = defineStatusAndInfoFromHistoryData(mergedItem);
+            extendedMessagesForCustomers = generateExtendedMessages(extendedMessagesForCustomers, 
+                new Date(mergedItem.sendAt.low * 1000), 
+                Object.keys(mergedItem.message)[0], 
+                historyResult.status
+              );
+            spendCount += historyResult.spendCount;
           }
         }
-
       })
-
-      
     }
     else
     {
       //# =============================================================================
       //# Setting history data 
       //# =============================================================================
-      spendCount += 1
-      extendedMessagesForCustomers.push({
-        sent_at: new Date(),
-        status: "Gönderildi. (Başarılı)",
-        message: ""
-      })
       logger.Log(
         globalConfig.LogTypes.error,
         globalConfig.LogLocations.all,
         `GEÇMİŞ DATASI BULUNMUYOR | UYARI | MÜŞTERİNİN INTERNET BAĞLANTISI YOK.`
       );
+      spendCount += 1
+      extendedMessagesForCustomers = generateExtendedMessages(
+        extendedMessagesForCustomers, new Date(), "", "Gönderildi. (Başarılı)");
     }
     logger.Log(
       globalConfig.LogTypes.info,
@@ -610,16 +528,16 @@ class MessageController {
         Kullanıcı => ${this.queue.userId} | Kuyruk => ${this.queue._id.toString()} | o andaki müşteri => ${queueItem._id.toString()}`
     );
     //# =============================================================================
-    //# Update queueItem for history data and update spend credit amount 
+    //# Update queueItem for history data
     //# =============================================================================
     this.spendCountPerItem = (this.spendCountPerItem !== spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem
     queueItem.spendCredit = (spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem;
     queueItem.message_status = extendedMessagesForCustomers
     await queueItemModel.updateOne({_id: new mongoose.Types.ObjectId(queueItem._id)}, {$set: queueItem})
-    this.userProps.credit.totalAmount -= spendCount
     //# =============================================================================
     //# Decerease credit from user and set new transaction as spent type 
     //# =============================================================================
+    this.userProps.credit.totalAmount -= spendCount
     await creditsModel.updateOne({_id:  new mongoose.Types.ObjectId(this.userProps.credit._id)}, {$set: this.userProps.credit})
     await creditTransactionModel.create({
       user_id: this.userProps.credit.userId.toString(),

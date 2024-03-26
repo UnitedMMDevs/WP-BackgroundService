@@ -30,6 +30,7 @@ const { globalConfig, baseBanner } = require("./Utils/config");
  * Girdi(ler): NULL
  * Çıktı: NULL
  **********************************************/
+let activeQueue = []
 const runScript = async () => {
   try {
     //# =============================================================================
@@ -71,6 +72,7 @@ const runScript = async () => {
           });
           worker.postMessage('start');
           console.log(`THREAD ID: ${worker.threadId}`);
+          activeQueue.push({queue, worker: worker});
         }
       } else {
         logger.Log(
@@ -88,6 +90,7 @@ const runScript = async () => {
     logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.all, "Veri tabanı bağlantı hatası. [CRITICAL]", error);
   }
 }
+
 //# =============================================================================
 //# Process begin event listener 
 //# =============================================================================
@@ -96,7 +99,6 @@ process.on('SIGINT', async() => {
   logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.console, 'Veri tabanı bağlatısı kapatıldı.');
   process.exit(0);
 });
-
 //# =============================================================================
 //# Mongoose connection
 //# =============================================================================

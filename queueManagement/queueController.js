@@ -22,7 +22,7 @@ const fs = require("fs");
 const path = require("path")
 const { logger } = require('../Utils/logger');
 const { MessageController } = require("../messageManagement/messageController");
-const { QUEUE_STATUS, queueModel } = require("../model/queue.types");
+const { QUEUE_STATUS, queueModel, QUEUE_STATUS_ERROR_CODES } = require("../model/queue.types");
 
 
 
@@ -181,7 +181,6 @@ class QueueController {
       spendCredit: 0,
       message_status: ""
     })
-    console.log(queueItems.length)
     return queueItems;
   }
 
@@ -218,7 +217,6 @@ class QueueController {
         //# Sorting all files for createdAt
         //# =============================================================================
         filesWithStats.sort((a, b) => a.createdAt - b.createdAt);
-        console.log(filesWithStats);
         return filesWithStats;
       }
       else return [];
@@ -226,7 +224,8 @@ class QueueController {
       //# =============================================================================
       //# Catching read file operation errors
       //# =============================================================================
-      console.log(err);
+      this.queue.status = `${QUEUE_STATUS.ERROR}|${QUEUE_STATUS_ERROR_CODES.FILE_ERROR}`;
+      await queueModel.updateOne({_id: new mongoose.Types.ObjectId(this.queue._id)}, {$set: this.queue})
       logger.Log(
         globalConfig.LogTypes.warn,
         globalConfig.LogLocations.consoleAndFile,
@@ -258,14 +257,9 @@ parentPort.on("message", async (message) => {
       await controller.ExecuteProcess();
     }
   }
-  if (message == "pause")
-  {
-    
-  }
   if (message === 'terminate')
   {
-
-    console.log("terminated")
+    logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.consoleAndFile, "||||||||||||PROCESS TERMINATED||||||||||||");
     process.exit(0);
   }
 });

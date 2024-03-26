@@ -105,9 +105,34 @@ const getFileType = (file_name) => {
     const extension = path.extname(file_name).toLowerCase();
     return extension;
 }
+ /**********************************************
+ * Fonksiyon: generateTextMessageForWP
+ * Açıklama: Bu fonksiyon gonderilmesi gereken mesaji db deki verilere 
+ *  -   gore sekillendirir.
+ *  -   yardimci fonksiyon
+ * Girdi(ler): queueItem db model, message string
+ * Çıktı: string
+ **********************************************/
+const generateTextMessageForWP = (queueItem, message) => {
+    //# =============================================================================
+    //# Setting dynamic data from queueMessage 
+    //# =============================================================================
+    if (queueItem.name !== "" && message.includes("[isim]"))
+      message = message.replace("[isim]", queueItem.name)
+    if (queueItem.info1 !=="" && message.includes("[bilgi1]"))
+      message = message.replace("[bilgi1]", queueItem.info1)
+    if (queueItem.info2 !=="" && message.includes("[bilgi2]"))
+      message = message.replace("[bilgi2]", queueItem.info2)
+    if (queueItem.info3 !== "" && message.includes("[bilgi3]"))
+      message = message.replace("[bilgi3]", queueItem.info3)
+
+    return message;
+}
 module.exports =  { 
     getRandomDelay, 
     defineStatusCheckDelay,  
     getFileType, 
     deleteFolderRecursive,
+    generateTextMessageForWP
+    
 }; 
