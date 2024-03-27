@@ -157,6 +157,17 @@ class MessageController {
               closeSocket(this.socket, parentPort)
               return;
             }
+            else if (status === 440)
+            {
+              //# =============================================================================
+              //# If user try to use same whatsapp account more than once. You should close the socket.
+              //# checking conflict.
+              //# =============================================================================
+              logger.Log(globalConfig.LogTypes.warn, globalConfig.LogLocations.all, "Kullani oturumunu ayni anda kullanmaya calisiyor/");
+              this.queue.status = `${QUEUE_STATUS.ERROR}|${QUEUE_STATUS_ERROR_CODES.CONFLICT}`;
+              await queueModel.updateOne({_id: new mongoose.Types.ObjectId(this.queue._id)}, {$set: this.queue})
+              closeSocket(this.socket, parentPort)
+            }
         }
         else if (connection === 'open'){
             //# =============================================================================
@@ -394,19 +405,19 @@ class MessageController {
         }
         case MESSAGE_STRATEGY.JUST_FILE: // OK 1 credit
         {
-        //# =============================================================================
-        //# Send single file 
-        //# =============================================================================
-        const extension = getFileType(this.files[0].name)
-        const file_type = isMedia(extension)
-        const fullFilePath = `${globalConfig.baseRootPath
-        }${this.queue._id.toString()}/${this.files[0].name}`;
-        if(file_type === FILE_TYPE.MEDIA)
-          await sendMedia(this.socket, currentReceiver, fullFilePath, extension)
-        else {
-          await sendFile(this.socket, currentReceiver, fullFilePath, extension)
-        }
-        break;
+          //# =============================================================================
+          //# Send single file 
+          //# =============================================================================
+          const extension = getFileType(this.files[0].name)
+          const file_type = isMedia(extension)
+          const fullFilePath = `${globalConfig.baseRootPath
+          }${this.queue._id.toString()}/${this.files[0].name}`;
+          if(file_type === FILE_TYPE.MEDIA)
+            await sendMedia(this.socket, currentReceiver, fullFilePath, extension)
+          else {
+            await sendFile(this.socket, currentReceiver, fullFilePath, extension)
+          }
+          break;
         }
         case MESSAGE_STRATEGY.MULTIPLE_FILE:
         {

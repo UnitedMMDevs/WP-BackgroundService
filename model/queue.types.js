@@ -4,6 +4,7 @@ const QUEUE_STATUS_ERROR_CODES = {
     NO_SESSION: "WhatsApp uygulamasında aktif bir oturumunuz yok.",
     SERVER_ERROR: "Bir sunucu sorunu nedeniyle hata oluştu.",
     FILE_ERROR: "Kuyruğa eklenmiş dosyalarda sorun bulunuyor.",
+    CONFLICT: "Kullanıcı bu hesabı aynı anda kullanmaya çalışıyor."
 }
 const QUEUE_STATUS = {
     PENDING:'PENDING',
