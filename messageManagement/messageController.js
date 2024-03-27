@@ -543,7 +543,8 @@ class MessageController {
     //# Update queueItem for history data
     //# =============================================================================
     this.spendCountPerItem = (this.spendCountPerItem !== spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem
-    queueItem.spendCredit = (spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem;
+    //queueItem.spendCredit = (spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem; spending credit per item length
+    queueItem.spendCredit = 1; // spending per user
     queueItem.message_status = extendedMessagesForCustomers
     await queueItemModel.updateOne({_id: new mongoose.Types.ObjectId(queueItem._id)}, {$set: queueItem})
     //# =============================================================================
@@ -553,7 +554,8 @@ class MessageController {
     await creditsModel.updateOne({_id:  new mongoose.Types.ObjectId(this.userProps.credit._id)}, {$set: this.userProps.credit})
     await creditTransactionModel.create({
       user_id: this.userProps.credit.userId.toString(),
-      amount: (spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem,
+      amount: 1, //spending per user
+      //amount: (spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem,
       transaction_date: new Date(Date.now()),
       transaction_type: "spent"
     })
