@@ -78,7 +78,6 @@ class QueueController {
         await queueModel.updateOne({_id: this.queue._id}, this.queue);
         let messageController = new MessageController(dependencies)
         await messageController.InitializeSocket();
-        process.exit(0)
       }
       catch(error)
       {
@@ -102,6 +101,7 @@ class QueueController {
         globalConfig.LogLocations.consoleAndFile,
         `Servis aktif kuyruğun bağımlılıklarını toplamaya başladı. [${this.queue._id.toString()}]`
       )
+      console.log(JSON.stringify(parentPort));
       //# =============================================================================
       //# Get user (Who created the queue)
       //# =============================================================================
@@ -256,10 +256,5 @@ parentPort.on("message", async (message) => {
       //# =============================================================================
       await controller.ExecuteProcess();
     }
-  }
-  if (message === 'terminate')
-  {
-    logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.consoleAndFile, "||||||||||||PROCESS TERMINATED||||||||||||");
-    process.exit(0);
-  }
+  } 
 });

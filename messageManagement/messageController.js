@@ -83,6 +83,7 @@ class MessageController {
     this.queueCompletedState = QUEUE_STATUS.IN_PROGRESS
     this.counter = 0
     this.spendCountPerItem = 0
+
   }
   /**********************************************
   * Fonksiyon: CheckConnectionSuccess
@@ -291,7 +292,7 @@ class MessageController {
         this.queueCompletedState = QUEUE_STATUS.PAUSED
         break;
       }
-      if (await RuleChecker.checkUserBlacklistedOrGrayListed(item, customerModel))
+      if (await RuleChecker.checkUserBlacklistedOrGrayListed(item, customerModel, this.userProps.credit.userId))
       {
         //# =============================================================================
         //# Pass the blacklisted or graylisted user. 

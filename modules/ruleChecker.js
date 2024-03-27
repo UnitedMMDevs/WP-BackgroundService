@@ -64,11 +64,11 @@ class RuleChecker {
     * Girdi(ler): model (database object)
     * Çıktı: boolean
     **********************************************/
-    static checkUserBlacklistedOrGrayListed = async(item, model) => {
+    static checkUserBlacklistedOrGrayListed = async(item, model, userId) => {
         //# =============================================================================
         //# Check the current receiver blacklisted or graylisted!!! 
         //# =============================================================================
-        const checkGrayOrBlackListed = await model.findOne({phone: item.phone, 
+        const checkGrayOrBlackListed = await model.findOne({phone: item.phone, userId: userId,
         $or: [
             {registeredBlackList: true},
             {registeredGrayList: true}

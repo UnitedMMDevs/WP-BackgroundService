@@ -30,7 +30,7 @@ const { globalConfig, baseBanner } = require("./Utils/config");
  * Girdi(ler): NULL
  * Çıktı: NULL
  **********************************************/
-let activeQueue = []
+let activeWorkers = []
 const runScript = async () => {
   try {
     //# =============================================================================
@@ -70,9 +70,15 @@ const runScript = async () => {
           const worker = new Worker("./queueManagement/queueController.js", {
             workerData: { queue: JSON.stringify(queue) },
           });
+          worker.on("message", (message)=> {
+            if(message === 'terminate') {
+              logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.consoleAndFile, "Thread Sonlandiriliyor.");
+              worker.terminate();
+            }
+          })
           worker.postMessage('start');
+          activeWorkers.push(worker);
           console.log(`THREAD ID: ${worker.threadId}`);
-          activeQueue.push({queue, worker: worker});
         }
       } else {
         logger.Log(
@@ -99,6 +105,16 @@ process.on('SIGINT', async() => {
   logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.console, 'Veri tabanı bağlatısı kapatıldı.');
   process.exit(0);
 });
+
+process.on("message", (message)=> {
+  if (message === "terminate") {
+    console.log("||||||||||||||||||||||||||||||| WORKER MESSAGE TO MAIN PROCESS||||||||||||||||||||||")
+    activeWorkers.forEach(element => {
+      console.log(element.threadId);
+    });
+    console.log("||||||||||||||||||||||||||||||| WORKER MESSAGE TO MAIN PROCESS||||||||||||||||||||||")
+  }
+})
 //# =============================================================================
 //# Mongoose connection
 //# =============================================================================
