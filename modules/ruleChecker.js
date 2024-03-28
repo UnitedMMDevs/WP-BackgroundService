@@ -78,10 +78,10 @@ class RuleChecker {
         if (checkGrayOrBlackListed)
         {
             logger.Log(globalConfig.LogTypes.warn, globalConfig.LogLocations.consoleAndFile, "||||||||||||||||||||||||||| RULE QUEUE GRAYLIST BLACKLIST NOT PASSED |||||||||||||||||||||||||||")
-            return true;
+            return checkGrayOrBlackListed;
         }
         logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.consoleAndFile, "||||||||||||||||||||||||||| RULE QUEUE GRAYLIST BLACKLIST PASSED |||||||||||||||||||||||||||")
-        return false;
+        return null;
     }
     /**********************************************
     * Fonksiyon: checkWpAccountExists 

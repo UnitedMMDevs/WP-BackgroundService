@@ -303,7 +303,8 @@ class MessageController {
         this.queueCompletedState = QUEUE_STATUS.PAUSED
         break;
       }
-      if (await RuleChecker.checkUserBlacklistedOrGrayListed(item, customerModel, this.userProps.credit.userId))
+      const checkGrayOrBlackListed = await RuleChecker.checkUserBlacklistedOrGrayListed(item, customerModel, this.userProps.credit.userId);
+      if (checkGrayOrBlackListed)
       {
         //# =============================================================================
         //# Pass the blacklisted or graylisted user. 
@@ -333,8 +334,17 @@ class MessageController {
         item.message_status = extendedMessagesForCustomers
         await queueItemModel.updateOne({_id: new mongoose.Types.ObjectId(item._id)}, {$set: item})
         logger.Log(globalConfig.LogTypes.warn, globalConfig.LogLocations.all, "Boyle bir whatsapp hesabi bulunamadi.");
+        await delay(1 * 1000)
+        setTimeout(() => {
+        },  1 * 1000);
         continue
       }
+      //# =============================================================================
+      //# Delay AFTER CHECKING USER EXISTS 
+      //# =============================================================================
+      await delay(1 * 1000)
+      setTimeout(() => {
+      },  1 * 1000);
       //# =============================================================================
       //# Send data to receiver 
       //# =============================================================================
