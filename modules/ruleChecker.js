@@ -4,9 +4,11 @@
  *    - Sistem tarafindan uyulmasi gereken kurallari kontrol eden sinif.
  ***********************************************************************/
 
+const { delay } = require("@whiskeysockets/baileys");
 const { globalConfig } = require("../Utils/config");
 const {logger} = require("../Utils/logger");
-const { checkReceiverExists } = require("../Utils/wp-utilities");
+const { getRandomDelay } = require("../Utils/utilties");
+const { checkReceiverExists, delayForProcessOverride } = require("../Utils/wp-utilities");
 const { QUEUE_STATUS } = require("../model/queue.types");
 
 
@@ -94,6 +96,7 @@ class RuleChecker {
         //# Check receiver not really exists 
         //# =============================================================================
         const condition = await checkReceiverExists(socket, receiver);
+        await delayForProcessOverride(getRandomDelay(3, 6))
         if (condition)
         {
             logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.consoleAndFile, "||||||||||||||||||||||||||| RULE QUEUE WP ACCOUNT PASSED |||||||||||||||||||||||||||")

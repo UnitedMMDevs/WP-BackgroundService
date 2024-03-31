@@ -13,8 +13,9 @@ const fs = require("fs")
 const { MessageType, MessageOptions, Mimetype, Browsers, delay, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys')
 const { globalConfig } = require("./config");
 const { wpSessionCollection } = require("../model/wpSession.types");
-const { delayThread } = require("./utilties");
+const { delayThread, getRandomDelay } = require("./utilties");
 const { generateUniqueCode } = require("./generateUniqueCode");
+const logger = require("./logger");
 
 
  /**********************************************
@@ -298,6 +299,20 @@ const checkReceiverExists = async(socket, receiver)=>{
   if(result?.exists) return true;
   return false;
 }
+
+const delayForProcess = async(settings) => {
+  const delaySeconds = getRandomDelay(settings.min_message_delay, settings.max_message_delay) 
+  logger.logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.consoleAndFile, `||||||||WAIT FOR ${delaySeconds}||||||||`)
+  await delay((delaySeconds === 0 ? 2 : delaySeconds) * 1000)
+  setTimeout(() => {
+  },  (delaySeconds === 0 ? 2 : delaySeconds) * 1000);
+}
+const delayForProcessOverride = async(delayAmount) => {
+  logger.logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.consoleAndFile, `||||||||WAIT FOR ${delayAmount}||||||||`)
+  await delay((delayAmount) * 1000)
+  setTimeout(() => {
+  }, (delayAmount) * 1000);
+}
 module.exports = {
   MESSAGE_STATUS,
   FILE_TYPE,
@@ -312,6 +327,8 @@ module.exports = {
   sendFile,
   isMedia,
   checkReceiverExists,
+  delayForProcess,
+  delayForProcessOverride
 }
 
 

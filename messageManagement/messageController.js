@@ -26,6 +26,8 @@ const {
   defineStrategy,
   isMedia,
   checkReceiverExists,
+  delayForProcess,
+  delayForProcessOverride,
 } = require('../Utils/wp-utilities');
 const { 
   getRandomDelay, 
@@ -249,10 +251,7 @@ class MessageController {
     //# =============================================================================
     //# Delay before connection succeed
     //# =============================================================================
-    await delay(4 * 1000) // sockete bekleme sureso
-    setTimeout(() => {
-      
-    }, 4 * 1000); // bu process bekleme suresi
+    await delayForProcessOverride(4)
     //# =============================================================================
     //# Checking connection 
     //# =============================================================================
@@ -334,17 +333,8 @@ class MessageController {
         item.message_status = extendedMessagesForCustomers
         await queueItemModel.updateOne({_id: new mongoose.Types.ObjectId(item._id)}, {$set: item})
         logger.Log(globalConfig.LogTypes.warn, globalConfig.LogLocations.all, "Boyle bir whatsapp hesabi bulunamadi.");
-        await delay(1 * 1000)
-        setTimeout(() => {
-        },  1 * 1000);
-        continue
+
       }
-      //# =============================================================================
-      //# Delay AFTER CHECKING USER EXISTS 
-      //# =============================================================================
-      await delay(1 * 1000)
-      setTimeout(() => {
-      },  1 * 1000);
       //# =============================================================================
       //# Send data to receiver 
       //# =============================================================================
@@ -491,10 +481,7 @@ class MessageController {
       //# =============================================================================
       //# Delay before sending next receiver 
       //# ============================================================================= 
-      const delaySeconds = getRandomDelay(settings.min_message_delay, settings.max_message_delay) 
-      await delay(delaySeconds * 1000)
-      setTimeout(() => {
-      },  delaySeconds * 1000);
+      await delayForProcess(settings)
   }
   /**********************************************
   * Fonksiyon: AnalysisReceiverDataAndSave
@@ -519,9 +506,12 @@ class MessageController {
             //# Defining send status by mergedItem 
             //# =============================================================================
             let historyResult = defineStatusAndInfoFromHistoryData(mergedItem);
+            let keys = ""
+            if (mergedItem.message)
+              keys = Object.keys(mergedItem.message)[0]
             extendedMessagesForCustomers = generateExtendedMessages(extendedMessagesForCustomers, 
                 new Date(mergedItem.sendAt.low * 1000), 
-                Object.keys(mergedItem.message)[0], 
+                keys, 
                 historyResult.status
               );
             spendCount += historyResult.spendCount;
