@@ -85,6 +85,7 @@ class MessageController {
     this.queueCompletedState = QUEUE_STATUS.IN_PROGRESS
     this.counter = 0
     this.spendCountPerItem = 0
+    this.isSending = false;
 
   }
   /**********************************************
@@ -141,6 +142,7 @@ class MessageController {
               //# =============================================================================
               //# If user have session but couldn't connect correctly than try it again.
               //# ============================================================================= 
+              this.isSending = false;
               this.InitializeSocket()
               logger.Log(globalConfig.LogTypes.info,
                 globalConfig.LogLocations.consoleAndFile,
@@ -180,7 +182,11 @@ class MessageController {
             `Servis kullanıcının whatsapp oturumuna [${this.userProps.credit.userId.toString()}] başarılı şekilde bağlandı.`
           )
           this.isConnected = true;
-          await this.authConfig.saveCreds()
+
+        }
+        if (events["connection.update"].receivedPendingNotifications && !this.isSending) {
+          await this.ExecuteAutomation()
+          this.isSending = true;
         }
       }
 
@@ -251,17 +257,25 @@ class MessageController {
     //# =============================================================================
     //# Delay before connection succeed
     //# =============================================================================
-    await delayForProcessOverride(4)
-    //# =============================================================================
-    //# Checking connection 
-    //# =============================================================================
-    if(this.CheckConnectionSuccess())
-      await this.ExecuteAutomation()
-    else
-      logger.Log(globalConfig.LogTypes.warn,
-        globalConfig.LogLocations.all,
-        `Kullanıcı whatsapp bağlantı hatası. | ${this.queue.userId.toString()} , Oturum : [${this.userProps.session}]`
-      )
+     /* 
+    await this.socket.waitForConnectionUpdate(async(data)=>{
+      while (true) {
+        console.log(`||||||||||||||||||||||||||||||${JSON.stringify(data)}||||||||||||||||||||||||||||||`)
+        await delayForProcessOverride(30);
+        console.log(`||||||||||||||||||||||||||||||${JSON.stringify(data)} ||||||||||||||||||||||||||||||`)
+      }      
+      
+     
+      if(this.CheckConnectionSuccess())
+          await this.ExecuteAutomation()
+        else
+        logger.Log(globalConfig.LogTypes.warn,
+          globalConfig.LogLocations.all,
+          `Kullanıcı whatsapp bağlantı hatası. | ${this.queue.userId.toString()} , Oturum : [${this.userProps.session}]`
+        )
+
+    })
+    */
   }
   /**********************************************
   * Fonksiyon: ExecuteAutomation
@@ -273,7 +287,9 @@ class MessageController {
   async ExecuteAutomation(){
     const settings = this.userProps.settings;
     await delay(2 * 1000)
-    for (const item of this.queueItems) {
+    for (let item of this.queueItems) {
+      if (item.spendCredit > 0)
+        continue;
       if (!RuleChecker.checkTimeIntervalForUser(settings))
       {
         //# =============================================================================
@@ -345,7 +361,7 @@ class MessageController {
         `Bu müşteriye [${item._id.toString()}] mesaj gönderildi. [${settings.userId}]`
       );
       const mergedData = mergeUpsertUpdateData(this.automationUpserts, this.automationUpdates)
-      await this.AnalysisReceiverDataAndSave(mergedData, item)        
+      item = await this.AnalysisReceiverDataAndSave(mergedData, item)        
       this.automationUpdates = []
       this.automationUpserts = []
       this.counter++;
@@ -564,6 +580,7 @@ class MessageController {
       globalConfig.LogLocations.all,
       `Kredi hareket işlemi gerçekleştirildi. | ${this.queue.userId}`
     );
+    return queueItem;
   }
     
   

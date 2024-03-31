@@ -57,14 +57,6 @@ const runScript = async () => {
       if (queueList.length > 0) {
         for (let queue of queueList) {
           //# =============================================================================
-          //# Defining queue status WAITING TO IN_PROGRESS for the backend
-          //# =============================================================================
-          queue.status = QUEUE_STATUS.IN_PROGRESS;
-          const updatedQueue = await queueModel.updateOne(
-            {_id: queue._id.toString()},
-              {$set:queue}
-          );
-          //# =============================================================================
           //# Generate background worker for each active queue 
           //# =============================================================================
           const worker = new Worker("./queueManagement/queueController.js", {

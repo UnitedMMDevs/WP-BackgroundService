@@ -40,7 +40,6 @@ const generateSocketOptions = (state) => {
     printQRInTerminal: false,
     auth: state,
     defaultQueryTimeoutMs: undefined,
-    receivedPendingNotifications: true,
     markOnlineOnConnect: true,
     syncFullHistory: false,
     keepAliveIntervalMs: 1000,
@@ -294,7 +293,6 @@ const closeSocket = (socket, parentPort) => {
  * Çıktı: NULL
  **********************************************/
 const checkReceiverExists = async(socket, receiver)=>{
-
   const [result] = await socket.onWhatsApp(receiver);
   if(result?.exists) return true;
   return false;

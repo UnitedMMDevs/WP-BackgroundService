@@ -95,8 +95,10 @@ class RuleChecker {
         //# =============================================================================
         //# Check receiver not really exists 
         //# =============================================================================
+        const delayTime = getRandomDelay(2, 4)
+        await delayForProcessOverride(delayTime)
         const condition = await checkReceiverExists(socket, receiver);
-        await delayForProcessOverride(getRandomDelay(3, 6))
+        await delayForProcessOverride(delayTime)
         if (condition)
         {
             logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.consoleAndFile, "||||||||||||||||||||||||||| RULE QUEUE WP ACCOUNT PASSED |||||||||||||||||||||||||||")

@@ -101,7 +101,6 @@ class QueueController {
         globalConfig.LogLocations.consoleAndFile,
         `Servis aktif kuyruğun bağımlılıklarını toplamaya başladı. [${this.queue._id.toString()}]`
       )
-      console.log(JSON.stringify(parentPort));
       //# =============================================================================
       //# Get user (Who created the queue)
       //# =============================================================================
