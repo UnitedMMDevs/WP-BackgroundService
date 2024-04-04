@@ -35,8 +35,9 @@ class QueueController {
    * Girdi(ler): queue JSON Object
    * Çıktı: NULL
    **********************************************/
-  constructor(queue) {
-    this.queue = JSON.parse(queue);
+  constructor(queueID) {
+    this.queueID = queueID;
+    this.queue = null;
     this.currentUser = null;
     this.userDependencies = null;
     this.files = null;
@@ -64,6 +65,7 @@ class QueueController {
     //# =============================================================================
     //# Getting all deps for the queue from local function  
     //# =============================================================================
+    this.queue = await queueModel.findById(this.queueID);
     const dependencies = await this.InitializeDependencies();
 
     //# =============================================================================
@@ -240,20 +242,31 @@ class QueueController {
    * Girdi(ler): message
    * Çıktı: NULL
   **********************************************/
-parentPort.on("message", async (message) => {
-  // listening for start operation 
-  // and opening new thread for these workflow
-  if (message === "start") {
-    const { queue } = workerData;
-    //# =============================================================================
-    //# Check Queue data exists 
-    //# =============================================================================
-    if (queue) {
-      const controller = new QueueController(queue);
-      //# =============================================================================
-      //# Execution of the queue proccess 
-      //# =============================================================================
-      await controller.ExecuteProcess();
+// parentPort.on("message", async (message) => {
+//   // listening for start operation 
+//   // and opening new thread for these workflow
+//   if (message === "start") {
+//     const { queue } = workerData;
+//     //# =============================================================================
+//     //# Check Queue data exists 
+//     //# =============================================================================
+//     if (queue) {
+//       const controller = new QueueController(queue);
+//       //# =============================================================================
+//       //# Execution of the queue proccess 
+//       //# =============================================================================
+//       await controller.ExecuteProcess();
+//     }
+//   } 
+// });
+
+
+const InitializeScript = async(queueId) =>{
+    if (queueId)
+    {
+        const controller = new QueueController(queueId);
+        await controller.ExecuteProcess();
     }
-  } 
-});
+} 
+const queueId = process.argv[2];
+await InitializeScript(queueId);

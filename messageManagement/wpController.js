@@ -1,5 +1,19 @@
+/***********************************************************************
+ *  İŞLEV: Whatsapp oturum kayit islemini belirleyen sinif icerir.
+ *  AÇIKLAMA:
+ *      Bu kod dosyasinda baglanti sirasinda degisen ve yada yeni uretilen
+ *      -   whatasapp oturum bilgileri icin crud islemleri yapan servis
+ ***********************************************************************/
+
+//# =============================================================================
+//# Lib imports
+//# =============================================================================
 const { initAuthCreds, proto } = require("@whiskeysockets/baileys");
 const { default: mongoose } = require("mongoose");
+
+//# =============================================================================
+//# Buffering JSON for generating understandable and proccessable Session Record
+//# =============================================================================
 const BufferJSON = {
     replacer: (k, value) => {
         if (
@@ -40,6 +54,14 @@ class WpController {
     {
         this.currentId = id;
     }
+
+    /**********************************************
+    * Fonksiyon: readData
+    * Açıklama: Daha onceden kayit edilmis Whatsapp hesabi
+    *   -   verilerini veri tabanindan alan fonksiyon
+    * Girdi(ler): id
+    * Çıktı: JSON Object
+    **********************************************/
     readData = async (id) => {
         try {
             const data = JSON.stringify(await this.collection.findOne({ _id: id }));
@@ -49,6 +71,14 @@ class WpController {
             return null;
         }
     };
+
+    /**********************************************
+    * Fonksiyon: writeData
+    * Açıklama: Yeni oturum kaydi veya guncelleme icin
+    *   -   kullanilan fonksyion
+    * Girdi(ler): id
+    * Çıktı: JSON Object
+    **********************************************/
     writeData = async (data, id) => {
         try {
             const informationToStore = JSON.parse(
@@ -70,12 +100,29 @@ class WpController {
         catch (err) {
         }
     };
+
+    /**********************************************
+    * Fonksiyon: removeData
+    * Açıklama: Oturum kaydi silmek icin
+    *   -   kullanilan fonksyion
+    * Girdi(ler): id
+    * Çıktı: JSON Object
+    **********************************************/
     removeData = async (id) => {
         try {
             await this.collection.deleteOne({ _id: id });
         } catch (_a) {
         }
     };
+
+    /**********************************************
+    * Fonksiyon: useMongoDBAuthState
+    * Açıklama: Baglanti sirasinda kullanilacak
+    *   -   objeleri ureten ve bunlari yukaridaki 
+    *   -   yardimci fonksiyonlar ile ureten fonksiyon
+    * Girdi(ler): collection
+    * Çıktı: JSON Object
+    **********************************************/
     useMongoDBAuthState = async (collection) => {
         this.collection = collection;
         const creds = await this.readData(this.currentId);
