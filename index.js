@@ -30,7 +30,6 @@ const { globalConfig, baseBanner } = require("./Utils/config");
  * Girdi(ler): NULL
  * Çıktı: NULL
  **********************************************/
-let activeWorkers = []
 const runScript = async () => {
   try {
     //# =============================================================================
@@ -68,9 +67,12 @@ const runScript = async () => {
               worker.terminate();
             }
           })
+          worker.on('error', (err) => {
+            console.error('worker error: ', err);
+            logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.all, `Thread problemi ${err}`);
+            worker.terminate();
+          });
           worker.postMessage('start');
-          activeWorkers.push(worker);
-          console.log(`THREAD ID: ${worker.threadId}`);
         }
       } else {
         logger.Log(
@@ -98,15 +100,6 @@ process.on('SIGINT', async() => {
   process.exit(0);
 });
 
-process.on("message", (message)=> {
-  if (message === "terminate") {
-    console.log("||||||||||||||||||||||||||||||| WORKER MESSAGE TO MAIN PROCESS||||||||||||||||||||||")
-    activeWorkers.forEach(element => {
-      console.log(element.threadId);
-    });
-    console.log("||||||||||||||||||||||||||||||| WORKER MESSAGE TO MAIN PROCESS||||||||||||||||||||||")
-  }
-})
 //# =============================================================================
 //# Mongoose connection
 //# =============================================================================

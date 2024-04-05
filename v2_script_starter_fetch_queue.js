@@ -26,14 +26,18 @@ const fetchQueue = async() => {
 }
 mongoose.connect(globalConfig.mongo_url).then(async(result) => {
   }).then((mongoResult) => {
-    fetchQueue().then((result) => {
-        console.log(["test", "test1", "test2"])
+    fetchQueue().then((mongoResult) => {
+        if (mongoResult.length > 0)
+        {
+          mongoResult.forEach((item)=> {
+            console.log(item._id);
+          })
+        }
         process.exit(0)
     }).catch((err) => {
         console.log(err);
         process.exit(1)
     });
-    
   });
 
 

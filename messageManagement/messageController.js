@@ -197,6 +197,7 @@ class MessageController {
         //# it correct one.
         //# ============================================================================= 
         await this.authConfig.saveCreds()
+        await delayForProcessOverride(getRandomDelay(0.4, 1.4))
       }
       if (events['messages.update'])
       {
@@ -225,6 +226,7 @@ class MessageController {
               return !this.automationUpdates.some((targetItem) => ((targetItem.remoteJid === item.remoteJid) && (targetItem.id === item.id)))
             })
             this.automationUpdates.push(...uniqueSeperatedData);
+            await delayForProcessOverride(getRandomDelay(0.4, 1.4))
           }
       }
       if (events['messages.upsert'])
@@ -251,6 +253,7 @@ class MessageController {
             return !this.automationUpserts.some((targetItem) => ((targetItem.remoteJid === item.remoteJid) && (targetItem.id === item.id)))
           })
           this.automationUpserts.push(...uniqueSeperatedData);
+          await delayForProcessOverride(getRandomDelay(0.4, 1.4))
         } 
       }
     })
