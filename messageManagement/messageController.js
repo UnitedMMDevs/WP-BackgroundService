@@ -257,28 +257,6 @@ class MessageController {
         } 
       }
     })
-    //# =============================================================================
-    //# Delay before connection succeed
-    //# =============================================================================
-     /* 
-    await this.socket.waitForConnectionUpdate(async(data)=>{
-      while (true) {
-        console.log(`||||||||||||||||||||||||||||||${JSON.stringify(data)}||||||||||||||||||||||||||||||`)
-        await delayForProcessOverride(30);
-        console.log(`||||||||||||||||||||||||||||||${JSON.stringify(data)} ||||||||||||||||||||||||||||||`)
-      }      
-      
-     
-      if(this.CheckConnectionSuccess())
-          await this.ExecuteAutomation()
-        else
-        logger.Log(globalConfig.LogTypes.warn,
-          globalConfig.LogLocations.all,
-          `Kullanıcı whatsapp bağlantı hatası. | ${this.queue.userId.toString()} , Oturum : [${this.userProps.session}]`
-        )
-
-    })
-    */
   }
   /**********************************************
   * Fonksiyon: ExecuteAutomation
@@ -563,26 +541,29 @@ class MessageController {
     //# =============================================================================
     this.spendCountPerItem = (this.spendCountPerItem !== spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem
     //queueItem.spendCredit = (spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem; spending credit per item length
-    queueItem.spendCredit = 1; // spending per user
+    queueItem.spendCredit = spendCount > 0 ? 1 : 0; // spending per user
     queueItem.message_status = extendedMessagesForCustomers
     await queueItemModel.updateOne({_id: new mongoose.Types.ObjectId(queueItem._id)}, {$set: queueItem})
     //# =============================================================================
     //# Decerease credit from user and set new transaction as spent type 
     //# =============================================================================
-    this.userProps.credit.totalAmount -= spendCount
-    await creditsModel.updateOne({_id:  new mongoose.Types.ObjectId(this.userProps.credit._id)}, {$set: this.userProps.credit})
-    await creditTransactionModel.create({
-      user_id: this.userProps.credit.userId.toString(),
-      amount: 1, //spending per user
-      //amount: (spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem,
-      transaction_date: new Date(Date.now()),
-      transaction_type: "spent"
-    })
-    logger.Log(
-      globalConfig.LogTypes.info,
-      globalConfig.LogLocations.all,
-      `Kredi hareket işlemi gerçekleştirildi. | ${this.queue.userId}`
-    );
+    if (spendCount > 0)
+    {
+      this.userProps.credit.totalAmount -= spendCount
+      await creditsModel.updateOne({_id:  new mongoose.Types.ObjectId(this.userProps.credit._id)}, {$set: this.userProps.credit})
+      await creditTransactionModel.create({
+        user_id: this.userProps.credit.userId.toString(),
+        amount: 1, //spending per user
+        //amount: (spendCount && spendCount > 0) ? spendCount : this.spendCountPerItem,
+        transaction_date: new Date(Date.now()),
+        transaction_type: "spent"
+      })
+      logger.Log(
+        globalConfig.LogTypes.info,
+        globalConfig.LogLocations.all,
+        `Kredi hareket işlemi gerçekleştirildi. | ${this.queue.userId}`
+      );
+    }
     return queueItem;
   }
     

@@ -106,7 +106,7 @@ const defineStatusAndInfoFromHistoryData = (mergedItem) => {
     switch(mergedItem.status) 
     {
         case MESSAGE_STATUS.ERROR: {
-            spendCount += 0;
+            spendCount = 0;
             status = "Gönderilemedi. (Başarısız)"
             break;
         }
