@@ -8,12 +8,28 @@
 //# =============================================================================
 //# Lib imports
 //# =============================================================================
-const { initAuthCreds, proto } = require("@whiskeysockets/baileys");
+const { proto } = require("@whiskeysockets/baileys");
 const { default: mongoose } = require("mongoose");
 
 //# =============================================================================
 //# Buffering JSON for generating understandable and proccessable Session Record
 //# =============================================================================
+const initAuthCreds = () => {
+    const identityKey = Curve.generateKeyPair()
+    return {
+        noiseKey: Curve.generateKeyPair(),
+        signedIdentityKey: identityKey,
+        signedPreKey: signedKeyPair(identityKey, 1),
+        registrationId: generateRegistrationId(),
+        advSecretKey: randomBytes(32).toString('base64'),
+        processedHistoryMessages: [],
+        nextPreKeyId: 1,
+        firstUnuploadedPreKeyId: 1,
+        accountSettings: {
+            unarchiveChats: false,
+        },
+    }
+}
 const BufferJSON = {
     replacer: (k, value) => {
         if (

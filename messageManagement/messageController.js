@@ -10,7 +10,7 @@
 //# Lib imports
 //# =============================================================================
 const fs = require("fs");
-const { makeWASocket, delay } = require("@whiskeysockets/baileys");
+const { makeWASocket, delay, DisconnectReason } = require("@whiskeysockets/baileys");
 const {
   closeSocket, 
   sendMedia, 
@@ -129,6 +129,12 @@ class MessageController {
     //# =============================================================================
     const socketOptions = generateSocketOptions(this.authConfig.state)
     this.socket = makeWASocket(socketOptions)
+    this.socket.onUnexpectedError(async(err, msg)=> {
+      logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.consoleAndFile, `WP-SOCKET-ERROR | ${msg}`)
+      this.queue.status = `${QUEUE_STATUS.ERROR}|${msg}`;
+      await queueModel.updateOne({_id: new mongoose.Types.ObjectId(this.queue._id)}, {$set: this.queue})
+      closeSocket(this.socket, parentPort);
+    })
     this.socket.ev.process(async(events) => {
       if (events["connection.update"])
       {
@@ -137,19 +143,10 @@ class MessageController {
         //# ============================================================================= 
         const {connection, lastDisconnect} = events["connection.update"]
         const status = lastDisconnect?.error?.output?.statusCode
+        const shouldReconnect = status !== DisconnectReason.loggedOut;
+
         if (connection === 'close'){
-            if (!status || (status !== 403 && status !== 401)) {
-              //# =============================================================================
-              //# If user have session but couldn't connect correctly than try it again.
-              //# ============================================================================= 
-              this.isSending = false;
-              this.InitializeSocket()
-              logger.Log(globalConfig.LogTypes.info,
-                globalConfig.LogLocations.consoleAndFile,
-                `Servis kullanıcının whatsapp oturumuna bağlanmaya çalışıyor. [${this.userProps.credit.userId.toString()}]`
-              )
-            }
-            else if (status === 401)
+            if (status === DisconnectReason.loggedOut)
             {
               //# =============================================================================
               //# If user have delete his/her session from whatsapp. You should close the socket.
@@ -171,6 +168,18 @@ class MessageController {
               this.queue.status = `${QUEUE_STATUS.ERROR}|${QUEUE_STATUS_ERROR_CODES.CONFLICT}`;
               await queueModel.updateOne({_id: new mongoose.Types.ObjectId(this.queue._id)}, {$set: this.queue})
               closeSocket(this.socket, parentPort)
+            }
+            else if (shouldReconnect)
+            {
+              //# =============================================================================
+              //# If user have session but couldn't connect correctly than try it again.
+              //# ============================================================================= 
+              this.isSending = false;
+              this.InitializeSocket()
+              logger.Log(globalConfig.LogTypes.info,
+                globalConfig.LogLocations.consoleAndFile,
+                `Servis kullanıcının whatsapp oturumuna bağlanmaya çalışıyor. [${this.userProps.credit.userId.toString()}]`
+              )
             }
         }
         else if (connection === 'open'){
