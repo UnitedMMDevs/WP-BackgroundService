@@ -359,7 +359,7 @@ class MessageController {
         item.message_status = extendedMessagesForCustomers
         await queueItemModel.updateOne({_id: new mongoose.Types.ObjectId(item._id)}, {$set: item})
         logger.Log(globalConfig.LogTypes.warn, globalConfig.LogLocations.all, "Boyle bir whatsapp hesabi bulunamadi.");
-
+        continue;
       }
       //# =============================================================================
       //# Send data to receiver 
