@@ -97,17 +97,12 @@ class WpController {
     **********************************************/
     writeData = async (data, id) => {
         try {
-            const informationToStore = JSON.parse(
-                JSON.stringify(data, BufferJSON.replacer)
-
-            );
-            const update = {
-                $set: {
-                    ...informationToStore,
-                },
-            };
             if (data.me.id.split(':')[0] === id.split(':')[1]) {
-                const updated = await this.collection.updateOne({ _id: id }, update, { upsert: true });
+                const updated = await this.collection.replaceOne(
+                    { _id: id },
+                    JSON.parse(JSON.stringify(data, BufferJSON.replacer)), 
+                    { upsert: true }
+                );
                 return updated;
             }
             return null;
@@ -141,7 +136,7 @@ class WpController {
     **********************************************/
     useMongoDBAuthState = async (collection) => {
         this.collection = collection;
-        const creds = await this.readData(this.currentId);
+        const creds = await this.readData(this.currentId) || (0, initAuthCreds)();
         return {
             state: {
                 creds,
