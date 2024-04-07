@@ -110,7 +110,7 @@ const defineStrategy = (message, files) => {
   }
 
   // Handle unexpected case
-  throw new Error("Invalid strategy conditions");
+  return null;
 };
 
  /**********************************************
@@ -294,6 +294,7 @@ const closeSocket = (socket, parentPort) => {
  **********************************************/
 const checkReceiverExists = async(socket, receiver)=>{
   const [result] = await socket.onWhatsApp(receiver);
+  console.log(JSON.stringify(result, undefined, 2));
   if(result?.exists) return true;
   return false;
 }

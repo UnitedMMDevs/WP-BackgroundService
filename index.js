@@ -110,7 +110,7 @@ mongoose.connect(globalConfig.mongo_url).then(async(result) => {
 
     `Veri tabanına bağlandı.`
   );
-}).then();
+})
 
 
 console.log(baseBanner)

@@ -85,6 +85,9 @@ class QueueController {
         //# Catching service errors and if necesssary restart the process.
         //# =============================================================================
         logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.all, `SISTEM HATASI | ${error}`)  
+        this.queue.status = QUEUE_STATUS.ERROR;
+        await queueModel.updateOne({_id: this.queue._id}, this.queue);
+        
       }
     }
   }

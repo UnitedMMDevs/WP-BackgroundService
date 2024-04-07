@@ -281,7 +281,18 @@ class MessageController {
           globalConfig.LogLocations.all,
           `Kuyruk [${this.queue._id.toString()}] gönderim zaman aralığını geçti. Servis bu yüzden gönderim işlemini beklemeye aldı.`
         );
+        //# =============================================================================
+        //# Update QUEUE FOR STATUS  
+        //# =============================================================================
         this.queueCompletedState = QUEUE_STATUS.PAUSED
+        this.queue.status = this.queueCompletedState;
+        await queueModel.updateOne(
+          {_id: this.queue._id.toString()},
+            {$set:this.queue}
+        );
+        //# =============================================================================
+        //# Close connection 
+        //# =============================================================================
         closeSocket(this.socket, parentPort);
         break;
       }
@@ -293,10 +304,19 @@ class MessageController {
           `Kuyruk [${this.queue._id.toString()}] kullanıcı tarafından durduruldu. [${this.userProps.credit.userId}]`
         );
         //# =============================================================================
+        //# Update QUEUE FOR STATUS  
+        //# =============================================================================
+        this.queueCompletedState = QUEUE_STATUS.PAUSED
+        this.queue.status = this.queueCompletedState;
+        await queueModel.updateOne(
+          {_id: this.queue._id.toString()},
+            {$set:this.queue}
+        );
+        //# =============================================================================
         //# Close connection 
         //# =============================================================================
         closeSocket(this.socket, parentPort);
-        this.queueCompletedState = QUEUE_STATUS.PAUSED
+        
         break;
       }
       const checkGrayOrBlackListed = await RuleChecker.checkUserBlacklistedOrGrayListed(item, customerModel, this.userProps.credit.userId);
