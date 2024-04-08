@@ -129,12 +129,7 @@ class MessageController {
     //# =============================================================================
     const socketOptions = generateSocketOptions(this.authConfig.state)
     this.socket = makeWASocket(socketOptions)
-    this.socket.onUnexpectedError(async(err, msg)=> {
-      logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.consoleAndFile, `WP-SOCKET-ERROR | ${msg}`)
-      this.queue.status = `${QUEUE_STATUS.ERROR}|${msg}`;
-      await queueModel.updateOne({_id: new mongoose.Types.ObjectId(this.queue._id)}, {$set: this.queue})
-      closeSocket(this.socket, parentPort);
-    })
+  
     this.socket.ev.process(async(events) => {
       if (events["connection.update"])
       {
@@ -240,6 +235,7 @@ class MessageController {
       }
       if (events['messages.upsert'])
       {
+        
         //# =============================================================================
         //# Observing messages.upsert
         //# ============================================================================= 
@@ -248,6 +244,8 @@ class MessageController {
           `Servis bildirimleri kuyruk için toplama işlemi yapıyor. | Kuyruk => [${this.queue._id.toString()}]`
         )
         const data = events['messages.upsert']
+        const chat = data.messages[0]
+        if(chat.key.remoteJid.includes("status@broadcast")) return
         if (data)
         {
           //# =============================================================================

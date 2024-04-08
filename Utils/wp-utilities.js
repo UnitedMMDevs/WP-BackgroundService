@@ -269,7 +269,7 @@ const sendMediaAndContentMessage = async (socket, receiver, media, file_type, me
       mimetype: 'video/mp4',
       caption: message
     }
-    await socket.sendMessage(receiver, params) 
+    await socket.sendMessage(receiver, params)
   }
 }
 
