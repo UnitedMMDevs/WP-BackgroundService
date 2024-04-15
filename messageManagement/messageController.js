@@ -576,7 +576,7 @@ class MessageController {
     //# =============================================================================
     if (spendCount > 0)
     {
-      this.userProps.credit.totalAmount -= spendCount
+      this.userProps.credit.totalAmount -= 1;
       await creditsModel.updateOne({_id:  new mongoose.Types.ObjectId(this.userProps.credit._id)}, {$set: this.userProps.credit})
       await creditTransactionModel.create({
         user_id: this.userProps.credit.userId.toString(),
