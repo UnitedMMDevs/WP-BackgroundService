@@ -121,6 +121,18 @@ class RuleChecker {
         const condition = (settings.useSpamCode !== undefined) && settings.useSpamCode === true
         return condition;
     }
+
+    static checkBlockedUser = async(socket, receiver) => {
+        
+        
+        const blockedUsers = await socket.fetchBlockedUser();
+        const delayTime = getRandomDelay(2, 4)
+        await delayForProcessOverride(delayTime)
+        const userKey = receiver
+        const condition = blockedUsers.includes(userKey)
+
+        return condition;
+    }
 }
 
 module.exports = {RuleChecker};

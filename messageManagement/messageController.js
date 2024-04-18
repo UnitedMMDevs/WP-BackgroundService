@@ -348,6 +348,7 @@ class MessageController {
       //# Define current recevier 
       //# =============================================================================
       const currentReceiver = `${item.phone}${this.baseIdName}`;
+
       if (!await RuleChecker.checkWpAccountExists(this.socket, currentReceiver))
       {
         //# =============================================================================
@@ -359,6 +360,18 @@ class MessageController {
         item.message_status = extendedMessagesForCustomers
         await queueItemModel.updateOne({_id: new mongoose.Types.ObjectId(item._id)}, {$set: item})
         logger.Log(globalConfig.LogTypes.warn, globalConfig.LogLocations.all, "Boyle bir whatsapp hesabi bulunamadi.");
+        continue;
+      }
+
+      const checkBlocked = await RuleChecker.checkBlockedUser(this.socket, currentReceiver);
+      if(checkBlocked)
+      { 
+        let extendedMessagesForCustomers = [];
+        extendedMessagesForCustomers = generateExtendedMessages(extendedMessagesForCustomers, new Date(), "", "Bu kullanıcı engellenmiştir. (Mesaj gönderilemedi.)");
+        item.spendCredit = 0;
+        item.message_status = extendedMessagesForCustomers
+        await queueItemModel.updateOne({_id: new mongoose.Types.ObjectId(item._id)}, {$set: item})
+        logger.Log(globalConfig.LogTypes.warn, globalConfig.LogLocations.all, "Bu kullanıcı engellenmiştir.");
         continue;
       }
       //# =============================================================================
