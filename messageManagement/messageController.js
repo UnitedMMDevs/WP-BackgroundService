@@ -360,7 +360,6 @@ class MessageController {
         logger.Log(globalConfig.LogTypes.warn, globalConfig.LogLocations.all, "Boyle bir whatsapp hesabi bulunamadi.");
         continue;
       }
-
       const checkBlocked = await RuleChecker.checkBlockedUser(this.socket, currentReceiver);
       if(checkBlocked)
       { 
