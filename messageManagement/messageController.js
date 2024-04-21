@@ -361,7 +361,7 @@ class MessageController {
         continue;
       }
 
-      const checkBlocked = await RuleChecker.checkBlockedUser(this.socket.fetchBlocklist(), currentReceiver);
+      const checkBlocked = await RuleChecker.checkBlockedUser(this.socket, currentReceiver);
       if(checkBlocked)
       { 
         let extendedMessagesForCustomers = [];
