@@ -123,13 +123,18 @@ class RuleChecker {
     }
 
     static checkBlockedUser = async(socket, receiver) => {
-        
         const blockedUsers = await socket.fetchBlocklist();
         const delayTime = getRandomDelay(2, 4)
         await delayForProcessOverride(delayTime)
         const userKey = receiver
         const condition = blockedUsers.includes(userKey)
-
+        if (condition)
+        {
+            logger.Log(globalConfig.LogTypes.warn, globalConfig.LogLocations.consoleAndFile, "||||||||||||||||||||||||||| RULE QUEUE WP BLOCKED USERS NOT PASSED |||||||||||||||||||||||||||")
+        }
+        else {
+            logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.consoleAndFile, "||||||||||||||||||||||||||| RULE QUEUE WP BLOCKED USERS PASSED |||||||||||||||||||||||||||")
+        }
         return condition;
     }
 }
