@@ -445,13 +445,11 @@ class MessageController {
           //# =============================================================================
           //# Send single file 
           //# =============================================================================
-          console.log("sakasaka" + this.files[0].name)
           const extension = getFileType(this.files[0].name)
           const file_type = isMedia(extension)
           const fullFilePath = `${globalConfig.baseRootPath
           }${this.queue._id.toString()}/${this.files[0].name}`;
           const fileNName = fullFilePath.split("/")[fullFilePath.split("/").length - 1]
-          console.log("-------------------------------XD" + fileNName)
           if(file_type === FILE_TYPE.MEDIA)
             await sendMedia(this.socket, currentReceiver, fullFilePath, extension)
           else {
