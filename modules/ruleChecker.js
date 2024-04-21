@@ -123,8 +123,6 @@ class RuleChecker {
     }
 
     static checkBlockedUser = async(socket, receiver) => {
-        
-        
         const blockedUsers = await socket.fetchBlocklist();
         const delayTime = getRandomDelay(2, 4)
         await delayForProcessOverride(delayTime)

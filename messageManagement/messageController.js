@@ -139,7 +139,6 @@ class MessageController {
         const {connection, lastDisconnect} = events["connection.update"]
         const status = lastDisconnect?.error?.output?.statusCode
         const shouldReconnect = status !== DisconnectReason.loggedOut;
-
         if (connection === 'close'){
             if (status === DisconnectReason.loggedOut)
             {
@@ -272,6 +271,7 @@ class MessageController {
   * Girdi(ler): NULL
   * Çıktı: NULL
   **********************************************/
+
   async ExecuteAutomation(){
     const settings = this.userProps.settings;
     await delay(2 * 1000)
@@ -448,6 +448,7 @@ class MessageController {
           const file_type = isMedia(extension)
           const fullFilePath = `${globalConfig.baseRootPath
           }${this.queue._id.toString()}/${this.files[0].name}`;
+          const fileNName = fullFilePath.split("/")[fullFilePath.split("/").length - 1]
           if(file_type === FILE_TYPE.MEDIA)
             await sendMedia(this.socket, currentReceiver, fullFilePath, extension)
           else {
