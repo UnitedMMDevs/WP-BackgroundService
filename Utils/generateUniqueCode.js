@@ -14,16 +14,11 @@ function generateUniqueCode() {
 
     let code = '';
 
-    // 6 harf üret
-    for (let i = 0; i < 6; i++) {
-        code += letters.charAt(Math.floor(Math.random() * letters.length));
-    }
-
     // 6 rakam üret
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 7; i++) {
         code += numbers.charAt(Math.floor(Math.random() * numbers.length));
     }
-    let result = "\n\n" + code;
+    let result = "\n\n" + "PRO-" + code;
     return result;
 }
 

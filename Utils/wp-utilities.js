@@ -177,13 +177,14 @@ const sendMessage = async (socket, receiver, message) => {
  * Çıktı: NULL
  **********************************************/
 const sendMedia = async(socket, receiver, file, file_type) => {
+  const file_name = file.split("/")[file.split("/").length - 1]
   if(file_type === ".jpg" || file_type === ".png" || file_type === ".jpeg")
   {
     //# =============================================================================
     //# If media file is an image then set the config as picture and send send to receiver
     //# =============================================================================
   
-    await socket.sendMessage(receiver, {image: {url: file}, caption: ""})
+    await socket.sendMessage(receiver, {image: {url: file}, caption: "", fileName: file_name})
   }
   
   else if(file_type === ".mp4")
@@ -195,6 +196,7 @@ const sendMedia = async(socket, receiver, file, file_type) => {
     const params = {
       video: {stream: fs.createReadStream(file)},
       mimetype: 'video/mp4',
+      fileName: file_name
     }
     await socket.sendMessage(receiver, params) 
   }
@@ -208,6 +210,7 @@ const sendMedia = async(socket, receiver, file, file_type) => {
  * Çıktı: NULL
  **********************************************/
 const sendFile = async (socket, receiver, file, file_type) => {
+  const file_name = file.split("/")[file.split("/").length - 1]
   if(file_type === ".mp3")
   {
     //# =============================================================================
@@ -215,7 +218,7 @@ const sendFile = async (socket, receiver, file, file_type) => {
     //# =============================================================================
     await socket.sendMessage(
       receiver, 
-      { audio: { url: file }, mimetype: 'audio/mp4' },
+      { audio: { url: file }, mimetype: 'audio/mp4', fileName: file_name},
     )
   }
   else if (file_type === ".ogg")
@@ -225,7 +228,7 @@ const sendFile = async (socket, receiver, file, file_type) => {
     //# =============================================================================
     await socket.sendMessage(
       receiver, 
-      { audio: { url: file }, mimetype: 'audio/mp4' },
+      { audio: { url: file }, mimetype: 'audio/mp4', fileName: file_name},
     )
   }
   else if(file_type === ".waptt")
@@ -235,7 +238,7 @@ const sendFile = async (socket, receiver, file, file_type) => {
     //# =============================================================================
     await socket.sendMessage(
       receiver, 
-      { audio: { url: file }, mimetype: 'audio/mp4' },
+      { audio: { url: file }, mimetype: 'audio/mp4', fileName: file_name},
     )
   }
   else
@@ -245,7 +248,7 @@ const sendFile = async (socket, receiver, file, file_type) => {
     //# =============================================================================
     await socket.sendMessage(
       receiver,
-      {document: { url: file, caption:""}},
+      {document: { url: file, caption:""}, fileName: file_name},
     )
   }
 }
