@@ -1,5 +1,5 @@
-import mongoose, { Schema } from "mongoose";
 
+const mongoose = require("mongoose");
 
 const dummyObj = {
     info: "test info",
@@ -7,7 +7,7 @@ const dummyObj = {
     sent_type: "ALL"
 }
 
-export const notificationConfigSchema = new Schema({
+const notificationConfigSchema = new mongoose.Schema({
     registerObj: {
         type: String,
         required: false,
@@ -54,4 +54,5 @@ export const notificationConfigSchema = new Schema({
         requried: true
     }
 })
-export const notificationConfigModel = mongoose.model('NotificationConfigurations', notificationConfigSchema);
+notificationConfigModel = mongoose.model('NotificationConfigurations', notificationConfigSchema);
+module.exports = {notificationConfigModel}
