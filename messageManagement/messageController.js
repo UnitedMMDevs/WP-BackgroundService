@@ -59,7 +59,9 @@ const { generateUniqueCode } = require("../Utils/generateUniqueCode");
 const { globalAgent } = require("http");
 const { wpSessionCollection } = require("../model/wpSession.types");
 const { RuleChecker } = require("../modules/ruleChecker");
-
+const {NotificationModule} = require("../modules/notificationModule");
+const { NOTIFICATION_TYPES } = require("../Utils/constants");
+const { notificationConfigModel } = require("../model/noticationConfiguration");
 class MessageController {
   constructor({
     queue,
@@ -149,6 +151,8 @@ class MessageController {
               await wpSessionCollection.deleteOne({ _id: this.userProps.session });
               this.queue.status = `${QUEUE_STATUS.ERROR}|${QUEUE_STATUS_ERROR_CODES.NO_SESSION}`;
               await queueModel.updateOne({_id: new mongoose.Types.ObjectId(this.queue._id)}, {$set: this.queue})
+              let config = (await notificationConfigModel.find({}))[0];
+              await NotificationModule.notify(NOTIFICATION_TYPES.QUEUE_ERROR, JSON.parse(config.queueErrorObj).sent_type, this.queue._id.toString());
               closeSocket(this.socket, parentPort)
               return;
             }
@@ -161,6 +165,8 @@ class MessageController {
               logger.Log(globalConfig.LogTypes.warn, globalConfig.LogLocations.all, "Kullani oturumunu ayni anda kullanmaya calisiyor/");
               this.queue.status = `${QUEUE_STATUS.ERROR}|${QUEUE_STATUS_ERROR_CODES.CONFLICT}`;
               await queueModel.updateOne({_id: new mongoose.Types.ObjectId(this.queue._id)}, {$set: this.queue})
+              let config = (await notificationConfigModel.find({}))[0];
+              await NotificationModule.notify(NOTIFICATION_TYPES.QUEUE_ERROR, JSON.parse(config.queueErrorObj).sent_type, this.queue._id.toString());
               closeSocket(this.socket, parentPort)
             }
             else if (shouldReconnect)
@@ -398,6 +404,9 @@ class MessageController {
     if (this.queue.status === QUEUE_STATUS.COMPLETED)
     {
       deleteFolderRecursive(`${globalConfig.baseRootPath}${this.queue._id.toString()}`)
+      let config = (await notificationConfigModel.find({}))[0];
+      await NotificationModule.notify(NOTIFICATION_TYPES.QUEUE_HAS_BEEN_FINISHED, JSON.parse(config.queueFinishedObj).sent_type, this.queue._id.toString());
+              
       logger.Log(
         globalConfig.LogTypes.info,
         globalConfig.LogLocations.all,

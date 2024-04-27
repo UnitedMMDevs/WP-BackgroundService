@@ -23,6 +23,9 @@ const path = require("path")
 const { logger } = require('../Utils/logger');
 const { MessageController } = require("../messageManagement/messageController");
 const { QUEUE_STATUS, queueModel, QUEUE_STATUS_ERROR_CODES } = require("../model/queue.types");
+const { notificationConfigModel } = require("../model/noticationConfiguration");
+const { NOTIFICATION_TYPES } = require("../Utils/constants");
+const { NotificationModule } = require("../modules/notificationModule");
 
 
 
@@ -75,6 +78,8 @@ class QueueController {
         //# Make queue status to IN_PROGRESS
         //# =============================================================================
         this.queue.status = QUEUE_STATUS.IN_PROGRESS;
+        let config = (await notificationConfigModel.find({}))[0];
+        await NotificationModule.notify(NOTIFICATION_TYPES.QUEUE_HAS_BEEN_STARTED, JSON.parse(config.queueBeginObj).sent_type, this.queue._id.toString());      
         await queueModel.updateOne({_id: this.queue._id}, this.queue);
         let messageController = new MessageController(dependencies)
         await messageController.InitializeSocket();
@@ -85,6 +90,8 @@ class QueueController {
         //# Catching service errors and if necesssary restart the process.
         //# =============================================================================
         logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.all, `SISTEM HATASI | ${error}`)  
+        let config = (await notificationConfigModel.find({}))[0];
+        await NotificationModule.notify(NOTIFICATION_TYPES.QUEUE_ERROR, JSON.parse(config.queueErrorObj).sent_type, this.queue._id.toString());
         this.queue.status = QUEUE_STATUS.ERROR;
         await queueModel.updateOne({_id: this.queue._id}, this.queue);
         
