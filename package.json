@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@whiskeysockets/baileys": "^6.6.0",
+    "dotenv": "^16.4.5",
     "mongodb": "^6.1.0",
     "mongoose": "^7.6.0",
     "node-schedule": "^2.1.1",

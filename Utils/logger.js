@@ -92,7 +92,7 @@ class DbLogger {
         this.logger = winston.createLogger(
             {
                 transports: [new winston.transports.MongoDB({
-                    db: globalConfig.mongo_url,
+                    db: globalConfig.env === "DEVELOPMENT" ? globalConfig.mongo_url_dev : globalConfig.mongo_url_prod,
                     options: { useUnifiedTopology: true },
                     collection: 'service-logs',
                 })],

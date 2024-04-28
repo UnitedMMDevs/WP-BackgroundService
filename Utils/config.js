@@ -10,7 +10,10 @@
 //# =============================================================================
 const path = require('path');
 const os = require('os');
+const dotenv = require("dotenv");
 
+
+dotenv.config();
  /**********************************************
  * Fonksiyon: getRootPath
  * Açıklama: Sandbox ortaminin isletim sistemi uzerindeki yolunu alir.
@@ -30,7 +33,9 @@ const baseBanner = `
 ╚██████╔╝██║░╚███║██║░░░██║░░░███████╗██████╔╝  ██║░╚═╝░██║██║░╚═╝░██║  ██████╔╝███████╗░░╚██╔╝░░██████╔╝
 ░╚═════╝░╚═╝░░╚══╝╚═╝░░░╚═╝░░░╚══════╝╚═════╝░  ╚═╝░░░░░╚═╝╚═╝░░░░░╚═╝  ╚═════╝░╚══════╝░░░╚═╝░░░╚═════╝░`;
 const globalConfig = {
-    mongo_url: "mongodb://127.0.0.1:27017/proWhatsApp",
+    env: process.env.NODE_ENV,
+    mongo_url_prod: process.env.MONGO_URL_PROD,
+    mongo_url_dev: process.env.MONGO_URL_DEV,
     baseRootPath: getRootPath(),
     LogTypes: {
         info: 'info',

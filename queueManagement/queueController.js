@@ -59,7 +59,7 @@ class QueueController {
     //# =============================================================================
     //# make connection to database for Sub thread  
     //# =============================================================================
-    await mongoose.connect(globalConfig.mongo_url);
+    await mongoose.connect(globalConfig.env === "DEVELOPMENT" ? globalConfig.mongo_url_dev : globalConfig.mongo_url_prod);
     logger.Log(globalConfig.LogTypes.info,
       globalConfig.LogLocations.consoleAndFile,
       `The Queue process executing for ${this.queue._id.toString()}]`)
