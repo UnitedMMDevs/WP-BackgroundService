@@ -1,17 +1,15 @@
-
-const mongoose = require("mongoose");
+const  mongoose = require("mongoose");
 
 const dummyObj = {
-    info: "test info",
-    message: "CONTNET TEXT",
-    sent_type: "ALL"
+    mail: true,
+    wp: true,
+    notification_name: "test"
 }
 
-const notificationConfigSchema = new mongoose.Schema({
-    registerObj: {
+const userNotificationSettingsSchema = new mongoose.Schema({
+    userId: {
         type: String,
-        required: false,
-        default: JSON.stringify(dummyObj),
+        required: true,
     },
     uploadCreditObj: {
         type: String,
@@ -48,11 +46,7 @@ const notificationConfigSchema = new mongoose.Schema({
         required: false,
         default: JSON.stringify(dummyObj)
     },
-    serviceStatus: {
-        type: String,
-        enum: ['ACTIVE','INACTIVE'],
-        requried: true
-    }
 })
-const notificationConfigModel = mongoose.model('NotificationConfigurations', notificationConfigSchema);
-module.exports = {notificationConfigModel}
+const userNotificationSettingsModel = mongoose.model('UserNotificationSettings', userNotificationSettingsSchema);
+
+module.exports = {userNotificationSettingsModel}

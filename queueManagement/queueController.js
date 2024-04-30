@@ -26,6 +26,7 @@ const { QUEUE_STATUS, queueModel, QUEUE_STATUS_ERROR_CODES } = require("../model
 const { notificationConfigModel } = require("../model/noticationConfiguration");
 const { NOTIFICATION_TYPES } = require("../Utils/constants");
 const { NotificationModule } = require("../modules/notificationModule");
+const { userNotificationSettingsModel } = require("../model/userNotificationSettings.types");
 
 
 
@@ -59,6 +60,7 @@ class QueueController {
     //# =============================================================================
     //# make connection to database for Sub thread  
     //# =============================================================================
+    console.log(globalConfig);
     await mongoose.connect(globalConfig.env === "DEVELOPMENT" ? globalConfig.mongo_url_dev : globalConfig.mongo_url_prod);
     logger.Log(globalConfig.LogTypes.info,
       globalConfig.LogLocations.consoleAndFile,
@@ -77,9 +79,13 @@ class QueueController {
         //# =============================================================================
         //# Make queue status to IN_PROGRESS
         //# =============================================================================
-        this.queue.status = QUEUE_STATUS.IN_PROGRESS;
         let config = (await notificationConfigModel.find({}))[0];
-        await NotificationModule.notify(NOTIFICATION_TYPES.QUEUE_HAS_BEEN_STARTED, JSON.parse(config.queueBeginObj).sent_type, this.queue._id.toString());      
+        let userSettings = await userNotificationSettingsModel.findOne({userId: this.queue.userId});
+        if (userSettings){
+          console.log(userSettings);
+          await NotificationModule.notify(NOTIFICATION_TYPES.QUEUE_HAS_BEEN_STARTED, JSON.parse(config.queueBeginObj).sent_type, this.queue._id.toString(), userSettings);      
+        }
+        this.queue.status = QUEUE_STATUS.IN_PROGRESS;
         await queueModel.updateOne({_id: this.queue._id}, this.queue);
         let messageController = new MessageController(dependencies)
         await messageController.InitializeSocket();
@@ -91,7 +97,10 @@ class QueueController {
         //# =============================================================================
         logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.all, `SISTEM HATASI | ${error}`)  
         let config = (await notificationConfigModel.find({}))[0];
-        await NotificationModule.notify(NOTIFICATION_TYPES.QUEUE_ERROR, JSON.parse(config.queueErrorObj).sent_type, this.queue._id.toString());
+        let userSettings = await userNotificationSettingsModel.findOne({userId: this.queue.userId});
+        if (userSettings){
+          await NotificationModule.notify(NOTIFICATION_TYPES.QUEUE_ERROR, JSON.parse(config.queueErrorObj).sent_type, this.queue._id.toString(), userSettings);
+        }
         this.queue.status = QUEUE_STATUS.ERROR;
         await queueModel.updateOne({_id: this.queue._id}, this.queue);
         
@@ -254,6 +263,7 @@ parentPort.on("message", async (message) => {
   // listening for start operation 
   // and opening new thread for these workflow
   if (message === "start") {
+    console.log("||||||||||||||||| HERE ||||||||||||||||||||")
     const { queue } = workerData;
     //# =============================================================================
     //# Check Queue data exists 

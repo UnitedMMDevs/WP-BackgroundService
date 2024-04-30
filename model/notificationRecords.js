@@ -42,5 +42,4 @@ const noticationRecordsScehma = new Schema({
 })
 
 const notificationRecordsModel = mongoose.model('NotificationRecords', noticationRecordsScehma);
-
 module.exports = {notificationRecordsModel}

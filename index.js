@@ -23,7 +23,6 @@ const mongoose = require("mongoose");
 const { globalConfig, baseBanner } = require("./Utils/config");
 
 
-console.log(globalConfig);
  /**********************************************
  * Fonksiyon: runScript
  * Açıklama: Her schedule zamaninda ana thread icerisinde aktif kuyruklari
@@ -69,7 +68,7 @@ const runScript = async () => {
             }
           })
           worker.on('error', (err) => {
-            console.error('worker error: ', err);
+            console.error('worker error: ', err.stack);
             logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.all, `Thread problemi ${err}`);
             worker.terminate();
           });
@@ -108,7 +107,6 @@ mongoose.connect(globalConfig.env === "DEVELOPMENT" ? globalConfig.mongo_url_dev
   logger.Log(
     globalConfig.LogTypes.info,
     globalConfig.LogLocations.consoleAndFile,
-
     `Veri tabanına bağlandı.`
   );
 })
@@ -121,7 +119,7 @@ console.log(baseBanner)
  * Girdi(ler): async function
  * Çıktı: NULL
  **********************************************/
-// schedule.scheduleJob("*/1 * * * *", async function() {
-//   await runScript();
-// });
+schedule.scheduleJob("*/1 * * * *", async function() {
+  await runScript();
+});
 
