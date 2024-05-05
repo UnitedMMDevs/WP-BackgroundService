@@ -34,8 +34,8 @@ const baseBanner = `
 ░╚═════╝░╚═╝░░╚══╝╚═╝░░░╚═╝░░░╚══════╝╚═════╝░  ╚═╝░░░░░╚═╝╚═╝░░░░░╚═╝  ╚═════╝░╚══════╝░░░╚═╝░░░╚═════╝░`;
 const globalConfig = {
     env: process.env.NODE_ENV,
-    mongo_url_prod: 'mongodb://127.0.0.1:27017/proWhatsApp',
-    mongo_url_dev: 'mongodb://127.0.0.1:27017/proWhatsApp',
+    mongo_url_prod: process.env.MONGO_URL_PROD,
+    mongo_url_dev: process.env.MONGO_URL_DEV,
     baseRootPath: getRootPath(),
     LogTypes: {
         info: 'info',
