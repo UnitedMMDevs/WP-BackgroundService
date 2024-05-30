@@ -45,6 +45,7 @@ const generateSocketOptions = (state) => {
     keepAliveIntervalMs: 1000,
     connectTimeoutMs: 15000,
     browser: Browsers.ubuntu("Desktop"),
+    version: [2, 2413, 1]
   }
   return socketOpt;
 }
