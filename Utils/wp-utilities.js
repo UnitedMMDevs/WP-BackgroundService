@@ -16,6 +16,7 @@ const { wpSessionCollection } = require("../model/wpSession.types");
 const { delayThread, getRandomDelay } = require("./utilties");
 const { generateUniqueCode } = require("./generateUniqueCode");
 const logger = require("./logger");
+const { default: pino } = require("pino");
 
 
  /**********************************************
@@ -45,7 +46,8 @@ const generateSocketOptions = (state) => {
     keepAliveIntervalMs: 1000,
     connectTimeoutMs: 15000,
     browser: Browsers.ubuntu("Desktop"),
-    version: [2, 2413, 1]
+    version: [2, 2413, 1],
+    logger: pino({level: "error"})
   }
   return socketOpt;
 }
@@ -297,10 +299,17 @@ const closeSocket = (socket, parentPort) => {
  * Çıktı: NULL
  **********************************************/
 const checkReceiverExists = async(socket, receiver)=>{
-  const [result] = await socket.onWhatsApp(receiver);
-  console.log(JSON.stringify(result, undefined, 2));
-  if(result?.exists) return true;
-  return false;
+  try {
+    const [result] = await socket.onWhatsApp(receiver);
+    console.log(JSON.stringify(result, undefined, 2));
+    if(result?.exists) return true;
+    return false;
+  }
+  catch(err) {
+    console.log("|||||||||| RECEIVER EXISTS ERROR |||||||||||")
+    console.log(err);
+    return true;
+  }
 }
 
 const delayForProcess = async(settings) => {

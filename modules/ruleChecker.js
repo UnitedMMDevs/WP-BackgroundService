@@ -85,6 +85,12 @@ class RuleChecker {
         logger.Log(globalConfig.LogTypes.info, globalConfig.LogLocations.consoleAndFile, "||||||||||||||||||||||||||| RULE QUEUE GRAYLIST BLACKLIST PASSED |||||||||||||||||||||||||||")
         return null;
     }
+
+    static checkQueueHasAProblem = async (item, model) => {
+        const currentState = await model.findById(item._id.toString());
+        const condition = currentState.status === QUEUE_STATUS.ERROR;
+        return condition;
+    }
     /**********************************************
     * Fonksiyon: checkWpAccountExists 
     * Açıklama: Gonderim yapilacak kisinin wp hesabi olup olmadigini kontrol eder.

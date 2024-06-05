@@ -350,6 +350,17 @@ class MessageController {
         closeSocket(this.socket, parentPort);
         break;
       }
+      if (await RuleChecker.checkQueueHasAProblem(this.queue, queueModel)) {
+        logger.Log(
+          globalConfig.LogTypes.info,
+          globalConfig.LogLocations.all,
+          `Kuyruk [${this.queue._id.toString()}] Hatali oldugu icin durduruluyor. [${
+            this.userProps.credit.userId
+          }]`
+        );
+
+        closeSocket(this.socket, parentPort);
+      }
       if (await RuleChecker.checkQueuePausedByUser(this.queue, queueModel)) {
         logger.Log(
           globalConfig.LogTypes.info,
