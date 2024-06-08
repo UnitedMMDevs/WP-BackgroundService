@@ -95,7 +95,7 @@ class QueueController {
         //# =============================================================================
         //# Catching service errors and if necesssary restart the process.
         //# =============================================================================
-        logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.all, `SISTEM HATASI | ${error}`)  
+        logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.consoleAndFile, `SISTEM HATASI | ${error}`)  
         let config = (await notificationConfigModel.find({}))[0];
         let userSettings = await userNotificationSettingsModel.findOne({userId: this.queue.userId});
         if (userSettings){
@@ -129,7 +129,7 @@ class QueueController {
       //# =============================================================================
       if (!this.currentUser) {
         logger.Log(globalConfig.LogTypes.error,
-          globalConfig.LogLocations.all,
+          globalConfig.LogLocations.consoleAndFile,
           `Bilinmeyen kullanıcı hatası!!!!`)
         return null;
       }
@@ -154,7 +154,7 @@ class QueueController {
       //# =============================================================================
       logger.Log(
         globalConfig.LogTypes.error,
-        globalConfig.LogLocations.all,
+        globalConfig.LogLocations.consoleAndFile,
         `Servis hata mesajı: ${err.message.toString()} aktif kuyruk id: [${this.queue._id.toString()}]`
       )
       return null;

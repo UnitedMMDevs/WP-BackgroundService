@@ -54,6 +54,7 @@ const runScript = async () => {
         status: QUEUE_STATUS.PENDING
       });
       if (queueList.length > 0) {
+        console.log("here");
         for (let queue of queueList) {
           //# =============================================================================
           //# Generate background worker for each active queue 
@@ -69,7 +70,7 @@ const runScript = async () => {
           })
           worker.on('error', (err) => {
             console.error('worker error: ', err.stack);
-            logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.all, `Thread problemi ${err}`);
+            logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.consoleAndFile, `Thread problemi ${err}`);
             worker.terminate();
           });
           worker.postMessage('start');
@@ -87,7 +88,7 @@ const runScript = async () => {
     //# Catching Database connection error!
     //# =============================================================================
     console.log(error);
-    logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.all, "Veri tabanı bağlantı hatası. [CRITICAL]", error);
+    logger.Log(globalConfig.LogTypes.error, globalConfig.LogLocations.consoleAndFile, "Veri tabanı bağlantı hatası. [CRITICAL]", error);
   }
 }
 

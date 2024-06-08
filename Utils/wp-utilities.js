@@ -10,7 +10,7 @@
 //# Lib imports
 //# =============================================================================
 const fs = require("fs")
-const { MessageType, MessageOptions, Mimetype, Browsers, delay, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys')
+const { MessageType, MessageOptions, Browsers, delay } = require('@whiskeysockets/baileys')
 const { globalConfig } = require("./config");
 const { wpSessionCollection } = require("../model/wpSession.types");
 const { delayThread, getRandomDelay } = require("./utilties");
@@ -46,8 +46,6 @@ const generateSocketOptions = (state) => {
     keepAliveIntervalMs: 1000,
     connectTimeoutMs: 15000,
     browser: Browsers.ubuntu("Desktop"),
-    version: [2, 2413, 1],
-    logger: pino({level: "error"})
   }
   return socketOpt;
 }
@@ -139,7 +137,7 @@ const checkAuthentication = async(logger, controller, session) => {
     if (!state) {
       logger.Log(
         globalConfig.LogTypes.error,
-        globalConfig.LogLocations.all,
+        globalConfig.LogLocations.consoleAndFile,
         "Session Error"
       );
       return null;
@@ -150,7 +148,7 @@ const checkAuthentication = async(logger, controller, session) => {
     //# =============================================================================
     logger.Log(
       globalConfig.LogTypes.error,
-      globalConfig.LogLocations.all,
+      globalConfig.LogLocations.consoleAndFile,
       "Session Error"
     );
     return null;

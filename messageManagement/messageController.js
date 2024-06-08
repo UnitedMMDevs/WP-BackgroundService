@@ -130,7 +130,7 @@ class MessageController {
     if (!this.authConfig.state && !this.authConfig.saveCreds) {
       logger.Log(
         globalConfig.LogTypes.warn,
-        globalConfig.LogLocations.all,
+        globalConfig.LogLocations.consoleAndFile,
         `No Session Recorded for this account | ${this.userProps.credit.userId}`
       );
       return;
@@ -156,7 +156,7 @@ class MessageController {
             //# =============================================================================
             logger.Log(
               globalConfig.LogTypes.warn,
-              globalConfig.LogLocations.all,
+              globalConfig.LogLocations.consoleAndFile,
               "Kullanicinin acik bir oturumu bulunmamaktadir."
             );
             await wpSessionCollection.deleteOne({
@@ -188,7 +188,7 @@ class MessageController {
             //# =============================================================================
             logger.Log(
               globalConfig.LogTypes.warn,
-              globalConfig.LogLocations.all,
+              globalConfig.LogLocations.con,
               "Kullani oturumunu ayni anda kullanmaya calisiyor/"
             );
             this.queue.status = `${QUEUE_STATUS.ERROR}|${QUEUE_STATUS_ERROR_CODES.CONFLICT}`;
@@ -332,7 +332,7 @@ class MessageController {
         //# =============================================================================
         logger.Log(
           globalConfig.LogTypes.info,
-          globalConfig.LogLocations.all,
+          globalConfig.LogLocations.consoleAndFile,
           `Kuyruk [${this.queue._id.toString()}] gönderim zaman aralığını geçti. Servis bu yüzden gönderim işlemini beklemeye aldı.`
         );
         //# =============================================================================
@@ -353,7 +353,7 @@ class MessageController {
       if (await RuleChecker.checkQueueHasAProblem(this.queue, queueModel)) {
         logger.Log(
           globalConfig.LogTypes.info,
-          globalConfig.LogLocations.all,
+          globalConfig.LogLocations.consoleAndFile,
           `Kuyruk [${this.queue._id.toString()}] Hatali oldugu icin durduruluyor. [${
             this.userProps.credit.userId
           }]`
@@ -364,7 +364,7 @@ class MessageController {
       if (await RuleChecker.checkQueuePausedByUser(this.queue, queueModel)) {
         logger.Log(
           globalConfig.LogTypes.info,
-          globalConfig.LogLocations.all,
+          globalConfig.LogLocations.consoleAndFile,
           `Kuyruk [${this.queue._id.toString()}] kullanıcı tarafından durduruldu. [${
             this.userProps.credit.userId
           }]`
@@ -413,7 +413,7 @@ class MessageController {
         );
         logger.Log(
           globalConfig.LogTypes.warn,
-          globalConfig.LogLocations.all,
+          globalConfig.LogLocations.consoleAndFile,
           checkGrayOrBlackListed.registeredBlackList &&
             !checkGrayOrBlackListed.registeredGrayList
             ? "Bu kullanıcı kara listeye alınmıştır."
@@ -447,7 +447,7 @@ class MessageController {
         );
         logger.Log(
           globalConfig.LogTypes.warn,
-          globalConfig.LogLocations.all,
+          globalConfig.LogLocations.consoleAndFile,
           "Boyle bir whatsapp hesabi bulunamadi."
         );
         continue;
@@ -472,7 +472,7 @@ class MessageController {
         );
         logger.Log(
           globalConfig.LogTypes.warn,
-          globalConfig.LogLocations.all,
+          globalConfig.LogLocations.consoleAndFile,
           "Bu kullanıcı engellenmiştir."
         );
         continue;
@@ -483,7 +483,7 @@ class MessageController {
       await this.SendDataToReceiver(item, currentReceiver);
       logger.Log(
         globalConfig.LogTypes.info,
-        globalConfig.LogLocations.all,
+        globalConfig.LogLocations.consoleAndFile,
         `Bu müşteriye [${item._id.toString()}] mesaj gönderildi. [${
           settings.userId
         }]`
@@ -529,7 +529,7 @@ class MessageController {
 
       logger.Log(
         globalConfig.LogTypes.info,
-        globalConfig.LogLocations.all,
+        globalConfig.LogLocations.consoleAndFile,
         `Mesaj gönderim işlemi bu kuyruk için başarıyla tamamlandi. 
         | USER [${this.queue.userId}] 
         | QUEUE [${this.queue._id.toString()}] | SESSION [${
@@ -714,7 +714,7 @@ class MessageController {
       //# =============================================================================
       logger.Log(
         globalConfig.LogTypes.error,
-        globalConfig.LogLocations.all,
+        globalConfig.LogLocations.consoleAndFile,
         `GEÇMİŞ DATASI BULUNMUYOR | UYARI | MÜŞTERİNİN INTERNET BAĞLANTISI YOK.`
       );
       spendCount += 1;
@@ -765,7 +765,7 @@ class MessageController {
       });
       logger.Log(
         globalConfig.LogTypes.info,
-        globalConfig.LogLocations.all,
+        globalConfig.LogLocations.consoleAndFile,
         `Kredi hareket işlemi gerçekleştirildi. | ${this.queue.userId}`
       );
     }
