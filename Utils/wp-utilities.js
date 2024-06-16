@@ -304,7 +304,7 @@ const checkReceiverExists = async(socket, receiver)=>{
     return false;
   }
   catch(err) {
-    console.log("|||||||||| RECEIVER EXISTS ERROR |||||||||||")
+    console.log("|||||||||| RECEIVER EXISTS ERROR |||||||||||", receiver)
     console.log(err);
     return true;
   }

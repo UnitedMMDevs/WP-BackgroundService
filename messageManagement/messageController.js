@@ -361,6 +361,27 @@ class MessageController {
 
         closeSocket(this.socket, parentPort);
       }
+      if (await RuleChecker.checkUserCreditAmountZero(this.userProps.credit.userId, creditsModel)){
+        logger.Log(
+          globalConfig.LogTypes.info,
+          globalConfig.LogLocations.consoleAndFile,
+          `Kuyruk [${this.queue._id.toString()}] Yetersiz Kredi. [${
+            this.userProps.credit.userId
+          }]`
+        );
+        this.queueCompletedState = `${QUEUE_STATUS.ERROR}|"Yetersiz Kredi"`;
+        this.queue.status = this.queueCompletedState;
+        await queueModel.updateOne(
+          { _id: this.queue._id.toString() },
+          { $set: this.queue }
+        );
+        //# =============================================================================
+        //# Close connection
+        //# =============================================================================
+        closeSocket(this.socket, parentPort);
+
+        break;
+      }
       if (await RuleChecker.checkQueuePausedByUser(this.queue, queueModel)) {
         logger.Log(
           globalConfig.LogTypes.info,

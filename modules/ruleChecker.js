@@ -111,6 +111,13 @@ class RuleChecker {
         }
         return condition;
     }
+    static checkUserCreditAmountZero = async (userId, creditModel) => {
+        const credit = await creditModel.findOne({userId: userId});
+        if (credit.totalAmount <= 0) {
+            return true;
+        }
+        return false;
+    }
     /**********************************************
     * Fonksiyon: ============================================================================= 
     * Açıklama: Gonderim yapilacak kisinin wp hesabi olup olmadigini kontrol eder.
