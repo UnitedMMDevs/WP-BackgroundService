@@ -476,16 +476,16 @@
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
 "@thi.ng/bitstream@^2.2.12":
-  version "2.2.60"
-  resolved "https://registry.yarnpkg.com/@thi.ng/bitstream/-/bitstream-2.2.60.tgz#d44a635a1d831f5a20cde0bacd0ea44323a593f6"
-  integrity sha512-wRtLQHj+MmyGuLk8wX6+s6JnCBOYb47k4CZ7EBjvY6ECkYajjV+ApYfMbM2jz8Fl28o3pBvJMHsm0K7R2KB2JQ==
+  version "2.2.61"
+  resolved "https://registry.yarnpkg.com/@thi.ng/bitstream/-/bitstream-2.2.61.tgz#ad253cce5d82e371b75df24f5d1ba7d5c5a72d86"
+  integrity sha512-TOlPtUVvsEf+lRPoRiYjztTgDsuez3deUaDdXtZw4MRWXuPPtJY+sfJ0iOovnegNFMcSorA/3Km3/aNGcyrr2A==
   dependencies:
-    "@thi.ng/errors" "^2.5.7"
+    "@thi.ng/errors" "^2.5.8"
 
-"@thi.ng/errors@^2.5.7":
-  version "2.5.7"
-  resolved "https://registry.yarnpkg.com/@thi.ng/errors/-/errors-2.5.7.tgz#1f28dd373c14d00af995aa21d99fbc523f9333dc"
-  integrity sha512-yha1STRQmkTWEFNMHpTlgXETjwyvZfyDZH6o2nfQ8rBMqco270h4BtOOXA+lFn0afXJAZ9iXmCKbPrlMlJvHuQ==
+"@thi.ng/errors@^2.5.8":
+  version "2.5.8"
+  resolved "https://registry.yarnpkg.com/@thi.ng/errors/-/errors-2.5.8.tgz#bfad7de863255750b647a0f4b5f26f1563b3fc84"
+  integrity sha512-e3aR4m2lMu5AMuKwwkoMzHNGJMZrob2lykAk8N2Hxo2bxjPpm2Ik9+tbcl4aTP+qMVvR7DPUimNJ9mlwC53l5A==
 
 "@tokenizer/token@^0.3.0":
   version "0.3.0"
@@ -498,9 +498,9 @@
   integrity sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==
 
 "@types/node@*", "@types/node@>=13.7.0":
-  version "20.14.2"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.14.2.tgz#a5f4d2bcb4b6a87bffcaa717718c5a0f208f4a18"
-  integrity sha512-xyu6WAMVwv6AKFLB+e/7ySZVr/0zLCzOa7rSpq6jNwpqOrUbcACDWC+53d4n2QHOnDou0fbIsg8wZu/sxrnI4Q==
+  version "20.14.8"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.14.8.tgz#45c26a2a5de26c3534a9504530ddb3b27ce031ac"
+  integrity sha512-DO+2/jZinXfROG7j7WKFn/3C6nFwxy2lLpgLjEXJz+0XKphZlTLJ14mo8Vfg8X5BWN6XjyESXq+LcYdT7tR3bA==
   dependencies:
     undici-types "~5.26.4"
 
@@ -570,10 +570,10 @@
     "@wasm-audio-decoders/common" "9.0.5"
     codec-parser "2.4.3"
 
-"@whiskeysockets/baileys@^6.6.0":
-  version "6.7.4"
-  resolved "https://registry.yarnpkg.com/@whiskeysockets/baileys/-/baileys-6.7.4.tgz#cab8365a94357064d64b6a824f35d5947eda6053"
-  integrity sha512-TaNgPb/3na/Wd+Q6rThM/SKE+xvXqxdHtqri4Vp7hQ3NoHF/Q3Woud8lajti+NUup1sBuMPTUUAkud9lxhF7sA==
+"@whiskeysockets/baileys@6.7.5":
+  version "6.7.5"
+  resolved "https://registry.yarnpkg.com/@whiskeysockets/baileys/-/baileys-6.7.5.tgz#b50615a4bc94dca1c519f9c8c6c574b151bc130a"
+  integrity sha512-5kDwir6wT1BY0aIdsJXDAHoq7Gy3oYwRXj3qFoS6MOC0udzF4e2D4vTbA/LVLg7a54dtDxXj+iEnrWcaE9jQZA==
   dependencies:
     "@adiwajshing/keyed-db" "^0.2.4"
     "@hapi/boom" "^9.1.3"
@@ -588,7 +588,7 @@
     node-cache "^5.1.2"
     pino "^7.0.0"
     protobufjs "^7.2.4"
-    uuid "^9.0.0"
+    uuid "^10.0.0"
     ws "^8.13.0"
 
 abort-controller@^3.0.0:
@@ -1166,9 +1166,9 @@ kuler@^2.0.0:
   integrity sha512-Xq9nH7KlWZmXAtodXDDRE7vs6DU1gTU8zYDHDiWLSip45Egwq3plLHzPn27NgvzL2r1LMPC1vdqh98sQxtqj4A==
 
 libphonenumber-js@^1.10.20:
-  version "1.11.3"
-  resolved "https://registry.yarnpkg.com/libphonenumber-js/-/libphonenumber-js-1.11.3.tgz#18126a2eec754eacd36f1f0d58590077fa5539ff"
-  integrity sha512-RU0CTsLCu2v6VEzdP+W6UU2n5+jEpMDRkGxUeBgsAJgre3vKgm17eApISH9OQY4G0jZYJVIc8qXmz6CJFueAFg==
+  version "1.11.4"
+  resolved "https://registry.yarnpkg.com/libphonenumber-js/-/libphonenumber-js-1.11.4.tgz#e63fe553f45661b30bb10bb8c82c9cf2b22ec32a"
+  integrity sha512-F/R50HQuWWYcmU/esP5jrH5LiWYaN7DpN0a/99U8+mnGGtnx8kmRE+649dQh3v+CowXXZc8vpkf5AmYkO0AQ7Q==
 
 "libsignal@github:adiwajshing/libsignal-node":
   version "2.0.1"
@@ -1341,9 +1341,9 @@ mongodb@^6.1.0:
     mongodb-connection-string-url "^3.0.0"
 
 mongoose@^7.6.0:
-  version "7.6.13"
-  resolved "https://registry.yarnpkg.com/mongoose/-/mongoose-7.6.13.tgz#d215c008da1e081e56aacab1cca5912b8a3d418f"
-  integrity sha512-2pFFgdP5tsXUz15odMKSvlnkEfzp1dKEd3Zs50xegCg0eRlANt6irW5RrF+HLHKoS5cwGZqUjUqgxJ50wWAReA==
+  version "7.7.0"
+  resolved "https://registry.yarnpkg.com/mongoose/-/mongoose-7.7.0.tgz#371fb3dc9f9f266fec93c74345bd0828feaa5eb4"
+  integrity sha512-+HcoN/hmkB5IjAqWYA2ZAQeExGD8FNMe6L/eTYB04gqp9S2ZEngVivGkdtGrA4BYRf0suH+3rMNFW2JPOqC4Mg==
   dependencies:
     bson "^5.5.0"
     kareem "2.5.1"
@@ -1396,9 +1396,9 @@ music-metadata@^7.12.3:
     token-types "^4.2.1"
 
 nan@^2.14.0, nan@^2.14.1:
-  version "2.19.0"
-  resolved "https://registry.yarnpkg.com/nan/-/nan-2.19.0.tgz#bb58122ad55a6c5bc973303908d5b16cfdd5a8c0"
-  integrity sha512-nO1xXxfh/RWNxfd/XPfbIfFk5vgLsAxUR9y5O0cHMJu/AW9U95JLXqthYHjEp+8gQ5p96K9jUp8nbVOxCdRbtw==
+  version "2.20.0"
+  resolved "https://registry.yarnpkg.com/nan/-/nan-2.20.0.tgz#08c5ea813dd54ed16e5bd6505bf42af4f7838ca3"
+  integrity sha512-bk3gXBZDGILuuo/6sKtr0DQmSThYHLtNCdSdXk9YkxD/jK6X2vmCyyXBBxyqZ4XcnzTyYEAThfX3DCEnLf6igw==
 
 node-cache@^5.1.2:
   version "5.1.2"
@@ -1609,9 +1609,9 @@ pino@^7.0.0:
     thread-stream "^0.15.1"
 
 pino@^9.1.0:
-  version "9.1.0"
-  resolved "https://registry.yarnpkg.com/pino/-/pino-9.1.0.tgz#f734617ad096568cc905e6a227266dbd6100c3fb"
-  integrity sha512-qUcgfrlyOtjwhNLdbhoL7NR4NkHjzykAPw0V2QLFbvu/zss29h4NkRnibyFzBrNCbzCOY3WZ9hhKSwfOkNggYA==
+  version "9.2.0"
+  resolved "https://registry.yarnpkg.com/pino/-/pino-9.2.0.tgz#e77a9516f3a3e5550d9b76d9f65ac6118ef02bdd"
+  integrity sha512-g3/hpwfujK5a4oVbaefoJxezLzsDgLcNJeITvC6yrfwYeT9la+edCK42j5QpEQSQCZgTKapXvnQIdgZwvRaZug==
   dependencies:
     atomic-sleep "^1.0.0"
     fast-redact "^3.1.1"
@@ -1682,9 +1682,9 @@ protobufjs@6.8.8:
     long "^4.0.0"
 
 protobufjs@^7.2.4:
-  version "7.3.0"
-  resolved "https://registry.yarnpkg.com/protobufjs/-/protobufjs-7.3.0.tgz#a32ec0422c039798c41a0700306a6e305b9cb32c"
-  integrity sha512-YWD03n3shzV9ImZRX3ccbjqLxj7NokGN0V/ESiBV5xWqrommYHYiihuIyavq03pWSGqlyvYUFmfoMKd+1rPA/g==
+  version "7.3.2"
+  resolved "https://registry.yarnpkg.com/protobufjs/-/protobufjs-7.3.2.tgz#60f3b7624968868f6f739430cfbc8c9370e26df4"
+  integrity sha512-RXyHaACeqXeqAKGLDl68rQKbmObRsTIn4TYVUUug1KfS47YWCo5MacGITEryugIgZqORCvJWEk4l449POg5Txg==
   dependencies:
     "@protobufjs/aspromise" "^1.1.2"
     "@protobufjs/base64" "^1.1.2"
@@ -1983,9 +1983,9 @@ thread-stream@^0.15.1:
     real-require "^0.1.0"
 
 thread-stream@^3.0.0:
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/thread-stream/-/thread-stream-3.0.2.tgz#ff6c557ed0cdd1f6c82b802481fbc22e11b8a006"
-  integrity sha512-cBL4xF2A3lSINV4rD5tyqnKH4z/TgWPvT+NaVhJDSwK962oo/Ye7cHSMbDzwcu7tAE1SfU6Q4XtV6Hucmi6Hlw==
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/thread-stream/-/thread-stream-3.1.0.tgz#4b2ef252a7c215064507d4ef70c05a5e2d34c4f1"
+  integrity sha512-OqyPZ9u96VohAyMfJykzmivOrY2wfMSf3C5TtFJVgN+Hm6aj+voFhlK+kZEIv2FBh1X6Xp3DlnCOfEQ3B2J86A==
   dependencies:
     real-require "^0.2.0"
 
@@ -2068,15 +2068,15 @@ util@^0.10.3:
   dependencies:
     inherits "2.0.3"
 
+uuid@^10.0.0:
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/uuid/-/uuid-10.0.0.tgz#5a95aa454e6e002725c79055fd42aaba30ca6294"
+  integrity sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==
+
 uuid@^3.3.2:
   version "3.4.0"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.4.0.tgz#b23e4358afa8a202fe7a100af1f5f883f02007ee"
   integrity sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==
-
-uuid@^9.0.0:
-  version "9.0.1"
-  resolved "https://registry.yarnpkg.com/uuid/-/uuid-9.0.1.tgz#e188d4c8853cc722220392c424cd637f32293f30"
-  integrity sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==
 
 uuidv5@^1.0.0:
   version "1.0.0"
@@ -2183,9 +2183,9 @@ wrappy@1:
   integrity sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==
 
 ws@^8.13.0:
-  version "8.17.0"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-8.17.0.tgz#d145d18eca2ed25aaf791a183903f7be5e295fea"
-  integrity sha512-uJq6108EgZMAl20KagGkzCKfMEjxmKvZHG7Tlq0Z6nOky7YF7aq4mOx6xK8TJ/i1LeK4Qus7INktacctDgY8Ow==
+  version "8.17.1"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-8.17.1.tgz#9293da530bb548febc95371d90f9c878727d919b"
+  integrity sha512-6XQFvXTkbfUOZOKKILFG1PDK2NDQs4azKQl26T0YS5CxqWLgXajbPZ+h4gZekJyRqFU8pvnbAbbs/3TgRPy+GQ==
 
 xhr@^2.0.1:
   version "2.6.0"

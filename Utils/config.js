@@ -21,7 +21,7 @@ dotenv.config();
  * Çıktı: string
  **********************************************/
 getRootPath = () => {
-    const filepath = `${path.parse(os.homedir()).root}home/.sandbox/`;
+    const filepath = `${path.parse(os.homedir()).root}root/.sandbox/`;
     return filepath;
 }
 
